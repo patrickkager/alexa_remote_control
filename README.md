@@ -1,2 +1,2 @@
-# alexa_remote_control
-Grundig Fire TV Alexa Volume Control
+# Alexa Volume Control
+Grundig Fire TV - Alexa Volume Control
