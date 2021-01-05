@@ -1,5 +1,5 @@
 <resources>
 
-    <style name="Theme.MyApplication" parent="@style/Theme.Leanback" />
+    <style name="Theme.AlexaVolumeControl" parent="@style/Theme.Leanback" />
         <!-- Some attributes like windowNoTitle, windowActionBar, ... -->
 </resources>

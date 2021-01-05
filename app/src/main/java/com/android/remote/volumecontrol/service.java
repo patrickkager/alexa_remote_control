@@ -20,12 +20,12 @@ public class service extends Service
     }
 
     @Override
-    public void onStart(Intent intent, int startid)
-    {
+    public int onStartCommand(Intent intent, int flags, int startId) {
         Intent intents = new Intent(getBaseContext(),MainActivity.class);
         intents.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intents);
         Toast.makeText(this, "My Service Started", Toast.LENGTH_LONG).show();
         Log.d(TAG, "onStart");
+        return START_NOT_STICKY;
     }
 }
