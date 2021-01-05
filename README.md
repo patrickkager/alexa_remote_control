@@ -22,9 +22,9 @@ With the app, it is possible to control the volume of the alexas via the TV remo
 The app now tries to log in to amazon, if 2FA is enabled enter the code and Click on the "MFA Button".
 
 ## App Settings
-eMail -> Your Amazon Username
-Password -> Your Amazon Password
-Room Name -> The group name of the devices that are controlled. 
-Volume Difference -> Send Command if Volume Difference is > then previous (volume buttin pressed serveral times)
-Volume Fixed -> Send fixed Volume Level
-Volume Adjusted -> Alexa adjust the Volume level by it self
+eMail -> Your Amazon Username \
+Password -> Your Amazon Password \
+Room Name -> The group name of the devices that are controlled \ 
+Volume Difference -> Send Command if Volume Difference is > then previous (volume buttin pressed serveral times) \
+Volume Fixed -> Send fixed Volume Level \
+Volume Adjusted -> Alexa adjust the Volume level by it self \
