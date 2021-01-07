@@ -18,6 +18,7 @@ public class SettingsContentObserver extends ContentObserver {
     private Context context;
     private AudioManager audioManager;
     private boolean lastMuteState = false;
+    private boolean isCheckRunning = false;
 
     public SettingsContentObserver(Context c, Handler handler) {
         super(handler);
@@ -57,20 +58,29 @@ public class SettingsContentObserver extends ContentObserver {
 
         AudioManager audio = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         int currentVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
-        int delta = previousVolume - currentVolume;
+        if (isCheckRunning || currentVolume == previousVolume)
+            return;
 
-        if (delta > 0) {
-            Log.d("AlexaVolumeControl", "Decreased");
-        } else if (delta < 0) {
-            Log.d("AlexaVolumeControl", "Increased");
-            delta = delta * (-1);
+        isCheckRunning = true;
+        int waitTime = ((MainActivity)this.context).changeVolumeDiff;
+        while (true) {
+            try {
+                Thread.sleep(waitTime);
+
+                int tmpVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
+                if (tmpVolume == currentVolume)
+                    break;
+
+                currentVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                break;
+            }
         }
 
         previousVolume = currentVolume;
-        //Send Command if delta volume difference is greater then
-        if(delta >= ((MainActivity)this.context).changeVolumeDiff){
-            ((MainActivity)this.context).ChangeVolume(String.valueOf(currentVolume));
-        }
+        ((MainActivity) context).ChangeVolume(String.valueOf(currentVolume));
+        isCheckRunning = false;
     }
 
     private boolean isMuted() {

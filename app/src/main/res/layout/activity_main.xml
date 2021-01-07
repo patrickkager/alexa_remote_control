@@ -45,22 +45,25 @@
                 android:textSize="30sp" />
 
             <Button
-                android:id="@+id/buttonGetDevices"
-                style="@style/Widget.AppCompat.Button"
-                android:layout_width="250dp"
-                android:layout_height="wrap_content"
-                android:onClick="TestVolumeControl"
-                android:text="@string/button_get_devices"
-                android:textColor="#E91E63"
-                android:textSize="30sp" />
-
-            <Button
                 android:id="@+id/buttonSettings"
                 style="@style/Widget.AppCompat.Button"
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
                 android:onClick="ShowSettings"
                 android:text="@string/button_settings"
+                android:textColor="#E91E63"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                android:visibility="visible"
+                tools:visibility="visible" />
+
+            <Button
+                android:id="@+id/buttonTestSomething"
+                style="@style/Widget.AppCompat.Button"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:onClick="ShowAbout"
+                android:text="@string/button_about"
                 android:textColor="#E91E63"
                 android:textSize="30sp"
                 android:textStyle="bold"
@@ -77,9 +80,7 @@
             <WebView
                 android:id="@+id/alexaWebViewer"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="visible"
-                tools:visibility="visible" />
+                android:layout_height="match_parent" />
 
             <LinearLayout
                 android:id="@+id/layoutSettings"
@@ -116,7 +117,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ems="10"
-                    android:inputType="textPersonName"
+                    android:inputType="textPersonName|textPassword"
                     android:singleLine="true" />
 
                 <TextView
@@ -152,7 +153,7 @@
                 <RadioGroup
                     android:id="@+id/radioGroupVolumeCmd"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:checkedButton="@id/radioButtonVolumeFixed"
                     android:orientation="horizontal">
 

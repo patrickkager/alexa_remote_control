@@ -3,7 +3,11 @@ package com.android.remote.volumecontrol;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.DownloadManager;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
+import android.media.AudioPlaybackCaptureConfiguration;
+import android.media.AudioPlaybackConfiguration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -43,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -91,7 +96,6 @@ public class MainActivity extends Activity {
         alexaViewer.getSettings().setJavaScriptEnabled(true);
         alexaViewer.getSettings().setLoadWithOverviewMode(true);
         alexaViewer.getSettings().setUseWideViewPort(true);
-
 
         alexaViewer.setWebViewClient(new WebViewClient() {
             @Override
@@ -174,9 +178,14 @@ public class MainActivity extends Activity {
 
         LoadSettings();
 
-        if(username != "" && password != "")
+        if(username != "" && password != ""){
             DoLogin(null);
+        }else{
+            ShowSettings(null);
+        }
+
     }
+
 
     private Boolean sendAlexaCommand(String DeviceSerial, String DeviceType,String jsonString) {
         try {
@@ -228,10 +237,6 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
         return false;
-    }
-
-    public void TestVolumeControl(View view) {
-        ChangeVolume("50");
     }
 
     public void ChangeVolume(String volume) {
@@ -297,7 +302,7 @@ public class MainActivity extends Activity {
         password = settings.getString("password", "");
         roomName = settings.getString("roomName", "Wohnzimmer");
         volumeCmd = settings.getString("volumeCmd","fixed");
-        changeVolumeDiff = settings.getInt("changeVolumeDiff", 3);
+        changeVolumeDiff = settings.getInt("changeVolumeDiff", 250);
 
         EditText txtusername = (EditText)findViewById(R.id.editTextUsername);
         EditText txtpassword = (EditText)findViewById(R.id.editTextPassword);
@@ -351,6 +356,10 @@ public class MainActivity extends Activity {
         editor.commit();
 
         DoLogin(view);
+    }
+
+    public void ShowAbout(View view){
+        alexaViewer.loadData("<h1>Alexa Volume Control</h1><h2>Version: "+Build.VERSION.CODENAME+"</h2>","text/html","UTF-8");
     }
 
     @Override
