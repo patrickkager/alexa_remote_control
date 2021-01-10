@@ -82,137 +82,231 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
-            <LinearLayout
-                android:id="@+id/layoutSettings"
+            <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:visibility="visible"
-                tools:visibility="visible">
+                android:layout_height="match_parent">
 
-                <TextView
-                    android:id="@+id/textView3"
+                <LinearLayout
+                    android:id="@+id/layoutSettings"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/lable_email"
-                    android:textSize="18sp" />
+                    android:orientation="vertical">
 
-                <EditText
-                    android:id="@+id/editTextUsername"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:inputType="textPersonName"
-                    android:singleLine="true" />
-
-                <TextView
-                    android:id="@+id/textView4"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/lable_password"
-                    android:textSize="18sp" />
-
-                <EditText
-                    android:id="@+id/editTextPassword"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:inputType="textPersonName|textPassword"
-                    android:singleLine="true" />
-
-                <TextView
-                    android:id="@+id/textView5"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/lable_room"
-                    android:textSize="18sp" />
-
-                <EditText
-                    android:id="@+id/editTextRoomNameFront"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:inputType="textPersonName"
-                    android:singleLine="true" />
-
-                <TextView
-                    android:id="@+id/textView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/lable_room_rear"
-                    android:textSize="18sp" />
-
-                <EditText
-                    android:id="@+id/editTextRoomNameRear"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:inputType="textPersonName"
-                    android:text="Name" />
-
-                <TextView
-                    android:id="@+id/textView2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/lable_volume_diff"
-                    android:textSize="18sp" />
-
-                <EditText
-                    android:id="@+id/editTextVolumeDiff"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:inputType="numberSigned" />
-
-                <TextView
-                    android:id="@+id/textView6"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/lable_keypress_wait"
-                    android:textSize="18sp" />
-
-                <EditText
-                    android:id="@+id/editTextKeyPressWait"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:inputType="numberSigned"
-                    android:singleLine="true" />
-
-                <RadioGroup
-                    android:id="@+id/radioGroupVolumeCmd"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:checkedButton="@id/radioButtonVolumeFixed"
-                    android:orientation="horizontal"
-                    android:visibility="gone"
-                    tools:visibility="gone">
-
-                    <RadioButton
-                        android:id="@+id/radioButtonVolumeFixed"
-                        android:layout_width="200dp"
-                        android:layout_height="wrap_content"
-                        android:checked="false"
-                        android:text="@string/radio_button_volume_fixed" />
-
-                    <RadioButton
-                        android:id="@+id/radioButtonVolumeAdjusted"
+                    <TextView
+                        android:id="@+id/textView3"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/radio_button_volume_adjusted" />
-                </RadioGroup>
+                        android:text="@string/lable_email"
+                        android:textSize="18sp" />
 
-                <Button
-                    android:id="@+id/buttonSaveSettings"
-                    style="@style/Widget.AppCompat.Button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:onClick="SaveSettings"
-                    android:text="@string/button_save"
-                    android:textColor="#E91E63"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+                    <EditText
+                        android:id="@+id/editTextUsername"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:inputType="textPersonName"
+                        android:singleLine="true" />
+
+                    <TextView
+                        android:id="@+id/textView4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/lable_password"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/editTextPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:inputType="textPersonName|textPassword"
+                        android:singleLine="true" />
+
+                    <TextView
+                        android:id="@+id/textView5"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/lable_room"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/editTextRoomNameFront"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:inputType="textPersonName"
+                        android:singleLine="true" />
+
+                    <TextView
+                        android:id="@+id/textView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/lable_room_rear"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/editTextRoomNameRear"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:inputType="textPersonName"
+                        android:text="Name" />
+
+                    <TextView
+                        android:id="@+id/textView2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/lable_volume_diff"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/editTextVolumeDiff"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:inputType="numberDecimal" />
+
+                    <TextView
+                        android:id="@+id/textView7"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/label_button_volume_boost"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/editTextVolumeBoost"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:inputType="number|numberDecimal" />
+
+                    <TextView
+                        android:id="@+id/textView6"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/lable_keypress_wait"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/editTextKeyPressWait"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:inputType="numberSigned|numberDecimal"
+                        android:singleLine="true" />
+
+                    <TextView
+                        android:id="@+id/textView8"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/lable_volume_boost_type"
+                        android:textSize="18sp" />
+
+                    <RadioGroup
+                        android:id="@+id/radioGroupBoostType"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/radioButtonBoostTypeAdd"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/radio_button_volume_boost_type_add" />
+
+                        <RadioButton
+                            android:id="@+id/radioButtonBoostTypeSub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/radio_button_volume_boost_type_sub" />
+
+                        <RadioButton
+                            android:id="@+id/radioButtonBootsTypeMultiply"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/radio_button_volume_boost_type_multiply" />
+
+                        <RadioButton
+                            android:id="@+id/radioButtonBoostTypeDivide"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/radio_button_volume_boost_type_divide" />
+                    </RadioGroup>
+
+                    <TextView
+                        android:id="@+id/textView9"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/lable_volume_diff_type"
+                        android:textSize="18sp" />
+
+                    <RadioGroup
+                        android:id="@+id/radioGroupVolumeDiffType"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/radioButtonVolumeDiffTypeAdd"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/radio_button_volume_boost_type_add" />
+
+                        <RadioButton
+                            android:id="@+id/radioButtonVolumeDiffTypeSub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/radio_button_volume_boost_type_sub" />
+
+                        <RadioButton
+                            android:id="@+id/radioButtonVolumeDiffTypeMultiply"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/radio_button_volume_boost_type_multiply" />
+
+                        <RadioButton
+                            android:id="@+id/radioButtonVolumeDiffTypeDivide"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/radio_button_volume_boost_type_divide" />
+                    </RadioGroup>
+
+                    <RadioGroup
+                        android:id="@+id/radioGroupVolumeCmd"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:checkedButton="@id/radioButtonVolumeFixed"
+                        android:orientation="horizontal"
+                        android:visibility="gone"
+                        tools:visibility="gone">
+
+                        <RadioButton
+                            android:id="@+id/radioButtonVolumeFixed"
+                            android:layout_width="200dp"
+                            android:layout_height="wrap_content"
+                            android:checked="false"
+                            android:text="@string/radio_button_volume_fixed" />
+
+                        <RadioButton
+                            android:id="@+id/radioButtonVolumeAdjusted"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/radio_button_volume_adjusted" />
+                    </RadioGroup>
+
+                    <Button
+                        android:id="@+id/buttonSaveSettings"
+                        style="@style/Widget.AppCompat.Button"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:onClick="SaveSettings"
+                        android:text="@string/button_save"
+                        android:textColor="#E91E63"
+                        android:textSize="30sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+            </ScrollView>
 
         </LinearLayout>
 

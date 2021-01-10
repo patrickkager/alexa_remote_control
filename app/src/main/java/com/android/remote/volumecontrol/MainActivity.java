@@ -39,6 +39,7 @@ public class MainActivity extends Activity {
     private SettingsContentObserver mSettingsContentObserver;
     private WebView alexaViewer;
     private LinearLayout settingsView;
+    private boolean loginDone = false;
     private String TAG = "MainActivity";
     private boolean settingsVisible = false;
     private String Cookies = "";
@@ -48,7 +49,10 @@ public class MainActivity extends Activity {
     private String roomIdRear = "";
 
     //Settings to Store
-    public Integer changeVolumeDiff = 0;
+    public String volumeDiffType = "";
+    public String volumeBoostType = "";
+    public float volumeBoost = 0;
+    public float changeVolumeDiff = 0;
     public Integer keyPressWait = 0;
     public String alexaLoginUrl = "alexa.amazon.de";
     public String alexaBaseURI = "alexa.amazon.de";
@@ -96,6 +100,7 @@ public class MainActivity extends Activity {
                         }
                     });
                 }else if(url.contains("/spa/index.html")){
+                    loginDone = true;
                     Map<String,String> httpHeaders = new HashMap<>();
                     httpHeaders.put("Content-Type","application/json");
                     alexaViewer.loadUrl("https://"+alexaBaseURI+"/api/devices-v2/device",httpHeaders);
@@ -149,7 +154,11 @@ public class MainActivity extends Activity {
         LoadSettings();
 
         if(username != "" && password != ""){
-            DoLogin(null);
+            if(loginDone){
+                ReLoadDevices();
+            }else{
+                DoLogin(null);
+            }
         }else{
             ShowSettings(null);
         }
@@ -215,6 +224,19 @@ public class MainActivity extends Activity {
             if(roomIdFront == null || roomIdFront == "" || volumeCmd == "")
                 return;
 
+            if(volumeBoostType.equals("Add")){
+                volume = (int)(volume + volumeBoost);
+            }else if(volumeBoostType.equals("Sub")){
+                volume = (int)(volume - volumeBoost);
+            }else if(volumeBoostType.equals("Divide")){
+                volume = (int)(volume / volumeBoost);
+            } else if(volumeBoostType.equals("Mulitply")){
+                volume = (int)(volume * volumeBoost);
+            }
+
+            if(volume < 0)
+                volume = 0;
+
             String jsonString = "";
             if(roomIdFront != null && roomIdFront != ""){
                 String[] arr = roomIdFront.split(";");
@@ -230,11 +252,19 @@ public class MainActivity extends Activity {
                 String[] arr = roomIdRear.split(";");
 
                 if(type.equals("inc") || type.equals("dec")){
-                    Integer tmpVol = volume - changeVolumeDiff;
-                    if(tmpVol <= 0)
-                        volume = changeVolumeDiff;
-                    else
-                        volume = volume - changeVolumeDiff;
+
+                    if(volumeDiffType.equals("Add")){
+                        volume = (int)(volume + changeVolumeDiff);
+                    }else if(volumeDiffType.equals("Sub")){
+                        volume = (int)(volume - changeVolumeDiff);
+                    } else if(volumeDiffType.equals("Divide")){
+                        volume = (int)(volume / changeVolumeDiff);
+                    } else if(volumeDiffType.equals("Mulitply")){
+                        volume = (int)(volume * changeVolumeDiff);
+                    }
+
+                    if(volume < 0)
+                        volume = 0;
                 }
 
                 if(volumeCmd.contains("fixed")){
@@ -252,6 +282,10 @@ public class MainActivity extends Activity {
 
     public void DoLogin(View view) {
         alexaViewer.loadUrl("https://"+alexaLoginUrl);
+    }
+
+    public void ReLoadDevices(){
+        alexaViewer.loadUrl("https://"+alexaBaseURI+"/api/devices-v2/device");
     }
 
     public void ClickSubmit(View view){
@@ -282,11 +316,14 @@ public class MainActivity extends Activity {
         SharedPreferences settings = getSharedPreferences(PREFER_NAME, MODE_PRIVATE);
         username = settings.getString("username", "");
         password = settings.getString("password", "");
-        roomNameFront = settings.getString("roomNameFront", "WohnzimmerFront");
-        roomNameRear = settings.getString("roomNameRear", "WohnzimmerRear");
+        roomNameFront = settings.getString("roomNameFront", "EchoStudio");
+        roomNameRear = settings.getString("roomNameRear", "Wohnzimmer");
         volumeCmd = settings.getString("volumeCmd","fixed");
-        changeVolumeDiff = settings.getInt("changeVolumeDiff", 0);
         keyPressWait = settings.getInt("keyPressWait",250);
+        changeVolumeDiff = settings.getFloat("changeVolumeDiff", 0);
+        volumeBoost  = settings.getFloat("volumeBoost",0);
+        volumeBoostType = settings.getString("volumeBoostType", "Add");
+        volumeDiffType = settings.getString("volumeDiffType", "Sub");
 
         EditText txtusername = (EditText)findViewById(R.id.editTextUsername);
         EditText txtpassword = (EditText)findViewById(R.id.editTextPassword);
@@ -294,8 +331,17 @@ public class MainActivity extends Activity {
         EditText txtroomNameRear = (EditText)findViewById(R.id.editTextRoomNameRear);
         EditText txtchangeVolumeDiff = (EditText)findViewById(R.id.editTextVolumeDiff);
         EditText txtKeyPressWait = (EditText)findViewById(R.id.editTextKeyPressWait);
+        EditText txtVolumeBoost = (EditText)findViewById(R.id.editTextVolumeBoost);
+        RadioButton rdVolumBoostAdd = (RadioButton)findViewById(R.id.radioButtonBoostTypeAdd);
+        RadioButton rdVolumBoostSub = (RadioButton)findViewById(R.id.radioButtonBoostTypeSub);
+        RadioButton rdVolumBoostDivide = (RadioButton)findViewById(R.id.radioButtonBoostTypeDivide);
+        RadioButton rdVolumBoostMulitply = (RadioButton)findViewById(R.id.radioButtonBootsTypeMultiply);
         RadioButton rdVolumeFixed = (RadioButton)findViewById(R.id.radioButtonVolumeFixed);
         RadioButton rdVolumeAdjusted = (RadioButton)findViewById(R.id.radioButtonVolumeAdjusted);
+        RadioButton rdVolumDiffTypeAdd = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeAdd);
+        RadioButton rdVolumDiffTypeSub = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeSub);
+        RadioButton rdVolumDiffTypeDivide = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeDivide);
+        RadioButton rdVolumDiffTypeMulitply = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeMultiply);
 
         txtusername.setText(username);
         txtpassword.setText(password);
@@ -303,6 +349,7 @@ public class MainActivity extends Activity {
         txtroomNameRear.setText(roomNameRear);
         txtKeyPressWait.setText(String.valueOf(keyPressWait));
         txtchangeVolumeDiff.setText(String.valueOf(changeVolumeDiff));
+        txtVolumeBoost.setText(String.valueOf(volumeBoost));
 
         if(volumeCmd.contains("fixed")){
             rdVolumeFixed.setChecked(true);
@@ -310,6 +357,52 @@ public class MainActivity extends Activity {
         }else{
             rdVolumeFixed.setChecked(false);
             rdVolumeAdjusted.setChecked(true);
+        }
+
+        if(volumeBoostType.equals("Add")){
+            rdVolumBoostAdd.setChecked(true);
+            rdVolumBoostSub.setChecked(false);
+            rdVolumBoostDivide.setChecked(false);
+            rdVolumBoostMulitply.setChecked(false);
+        }else if(volumeBoostType.equals("Sub")){
+            rdVolumBoostAdd.setChecked(false);
+            rdVolumBoostSub.setChecked(true);
+            rdVolumBoostDivide.setChecked(false);
+            rdVolumBoostMulitply.setChecked(false);
+        }else if(volumeBoostType.equals("Divide")){
+            rdVolumBoostAdd.setChecked(false);
+            rdVolumBoostSub.setChecked(false);
+            rdVolumBoostDivide.setChecked(true);
+            rdVolumBoostMulitply.setChecked(false);
+        }
+        else if(volumeBoostType.equals("Mulitply")){
+            rdVolumBoostAdd.setChecked(false);
+            rdVolumBoostSub.setChecked(false);
+            rdVolumBoostDivide.setChecked(false);
+            rdVolumBoostMulitply.setChecked(true);
+        }
+
+        if(volumeDiffType.equals("Add")){
+            rdVolumDiffTypeAdd.setChecked(true);
+            rdVolumDiffTypeSub.setChecked(false);
+            rdVolumDiffTypeDivide.setChecked(false);
+            rdVolumDiffTypeMulitply.setChecked(false);
+        }else if(volumeDiffType.equals("Sub")){
+            rdVolumDiffTypeAdd.setChecked(false);
+            rdVolumDiffTypeSub.setChecked(true);
+            rdVolumDiffTypeDivide.setChecked(false);
+            rdVolumDiffTypeMulitply.setChecked(false);
+        }else if(volumeDiffType.equals("Divide")){
+            rdVolumDiffTypeAdd.setChecked(false);
+            rdVolumDiffTypeSub.setChecked(false);
+            rdVolumDiffTypeDivide.setChecked(true);
+            rdVolumDiffTypeMulitply.setChecked(false);
+        }
+        else if(volumeDiffType.equals("Mulitply")){
+            rdVolumDiffTypeAdd.setChecked(false);
+            rdVolumDiffTypeSub.setChecked(false);
+            rdVolumBoostDivide.setChecked(false);
+            rdVolumDiffTypeMulitply.setChecked(true);
         }
     }
 
@@ -323,20 +416,54 @@ public class MainActivity extends Activity {
         EditText txtroomNameRear = (EditText)findViewById(R.id.editTextRoomNameRear);
         EditText txtchangeVolumeDiff = (EditText)findViewById(R.id.editTextVolumeDiff);
         EditText txtKeyPressWait = (EditText)findViewById(R.id.editTextKeyPressWait);
+        EditText txtVolumeBoost = (EditText)findViewById(R.id.editTextVolumeBoost);
         RadioButton rdVolumeFixed = (RadioButton)findViewById(R.id.radioButtonVolumeFixed);
         RadioButton rdVolumeAdjusted = (RadioButton)findViewById(R.id.radioButtonVolumeAdjusted);
+        RadioButton rdVolumBoostAdd = (RadioButton)findViewById(R.id.radioButtonBoostTypeAdd);
+        RadioButton rdVolumBoostSub = (RadioButton)findViewById(R.id.radioButtonBoostTypeSub);
+        RadioButton rdVolumBoostDivide = (RadioButton)findViewById(R.id.radioButtonBoostTypeDivide);
+        RadioButton rdVolumBoostMulitply = (RadioButton)findViewById(R.id.radioButtonBootsTypeMultiply);
+
+        RadioButton rdVolumDiffTypeAdd = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeAdd);
+        RadioButton rdVolumDiffTypeSub = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeSub);
+        RadioButton rdVolumDiffTypeDivide = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeDivide);
+        RadioButton rdVolumDiffTypeMulitply = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeMultiply);
 
         username = txtusername.getText().toString();
         password = txtpassword.getText().toString();
         roomNameFront = txtroomNameFront.getText().toString();
         roomNameRear = txtroomNameRear.getText().toString();
-        changeVolumeDiff = Integer.valueOf(txtchangeVolumeDiff.getText().toString());
         keyPressWait = Integer.valueOf(txtKeyPressWait.getText().toString());
+        changeVolumeDiff = Float.valueOf(txtchangeVolumeDiff.getText().toString());
+        volumeBoost  = Float.valueOf(txtVolumeBoost.getText().toString());
+
         volumeCmd = "fixed";
         if(rdVolumeFixed.isChecked()){
             volumeCmd = "fixed";
         }else if(rdVolumeAdjusted.isChecked()){
             volumeCmd = "adjusted";
+        }
+
+        volumeBoostType = "Add";
+        if(rdVolumBoostAdd.isChecked()){
+            volumeBoostType = "Add";
+        }else if(rdVolumBoostSub.isChecked()){
+            volumeBoostType = "Sub";
+        }else if(rdVolumBoostDivide.isChecked()){
+            volumeBoostType = "Divide";
+        } else if(rdVolumBoostMulitply.isChecked()){
+            volumeBoostType = "Mulitply";
+        }
+
+        volumeDiffType = "Sub";
+        if(rdVolumDiffTypeAdd.isChecked()){
+            volumeDiffType = "Add";
+        }else if(rdVolumDiffTypeSub.isChecked()){
+            volumeDiffType = "Sub";
+        }else if(rdVolumDiffTypeDivide.isChecked()){
+            volumeDiffType = "Divide";
+        } else if(rdVolumDiffTypeMulitply.isChecked()){
+            volumeDiffType = "Mulitply";
         }
 
         SharedPreferences settings = getSharedPreferences(PREFER_NAME, MODE_PRIVATE);
@@ -346,11 +473,18 @@ public class MainActivity extends Activity {
         editor.putString("roomNameFront", roomNameFront);
         editor.putString("roomNameRear", roomNameRear);
         editor.putString("volumeCmd", volumeCmd);
-        editor.putInt("changeVolumeDiff", changeVolumeDiff);
+        editor.putFloat("changeVolumeDiff", changeVolumeDiff);
+        editor.putFloat("volumeBoost", volumeBoost);
         editor.putInt("keyPressWait", keyPressWait);
+        editor.putString("volumeBoostType", volumeBoostType);
+        editor.putString("volumeDiffType", volumeDiffType);
         editor.commit();
 
-        DoLogin(view);
+        if(loginDone){
+            ReLoadDevices();
+        }else{
+            DoLogin(view);
+        }
     }
 
     public void ShowAbout(View view){
