@@ -166,7 +166,6 @@ public class MainActivity extends Activity {
 
     }
 
-
     private Boolean sendAlexaCommand(String DeviceSerial, String DeviceType,String jsonString) {
         try {
             URL url = new URL("https://"+alexaBaseURI+"/api/np/command?deviceSerialNumber="+DeviceSerial+"&deviceType="+DeviceType);
