@@ -531,6 +531,9 @@ public class MainActivity extends Activity {
     }
 
     public void ShowAbout(View view){
+        if(settingsVisible)
+            ShowSettings(view);
+
         alexaViewer.loadData("<h1>Alexa Volume Control</h1><h2>Version: "+BuildConfig.VERSION_NAME+"</h2>","text/html","UTF-8");
     }
 
