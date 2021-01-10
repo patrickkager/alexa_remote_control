@@ -271,6 +271,32 @@
                             android:text="@string/radio_button_volume_boost_type_divide" />
                     </RadioGroup>
 
+                    <TextView
+                        android:id="@+id/textView10"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/lable_volume_boost_type"
+                        android:textSize="18sp" />
+
+                    <RadioGroup
+                        android:id="@+id/radioGroupVolumeBoostGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/radioButtonBoostGroupAll"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/radio_button_volume_boost_mode_to_all" />
+
+                        <RadioButton
+                            android:id="@+id/radioButtonBoostGroupFront"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/radio_button_volume_boost_mode_to_front" />
+                    </RadioGroup>
+
                     <RadioGroup
                         android:id="@+id/radioGroupVolumeCmd"
                         android:layout_width="match_parent"

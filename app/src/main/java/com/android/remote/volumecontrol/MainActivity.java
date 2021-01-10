@@ -49,6 +49,7 @@ public class MainActivity extends Activity {
     private String roomIdRear = "";
 
     //Settings to Store
+    public String volumeBoostGroup = "";
     public String volumeDiffType = "";
     public String volumeBoostType = "";
     public float volumeBoost = 0;
@@ -224,22 +225,45 @@ public class MainActivity extends Activity {
             if(roomIdFront == null || roomIdFront == "" || volumeCmd == "")
                 return;
 
-            if(volumeBoostType.equals("Add")){
-                volume = (int)(volume + volumeBoost);
-            }else if(volumeBoostType.equals("Sub")){
-                volume = (int)(volume - volumeBoost);
-            }else if(volumeBoostType.equals("Divide")){
-                volume = (int)(volume / volumeBoost);
-            } else if(volumeBoostType.equals("Mulitply")){
-                volume = (int)(volume * volumeBoost);
-            }
+            //Volume Boost for All
+            if(type.equals("inc") || type.equals("dec")) {
+                if (volumeBoostGroup.equals("All")) {
+                    if(volumeBoostType.equals("Add")){
+                        volume = (int)(volume + volumeBoost);
+                    }else if(volumeBoostType.equals("Sub")){
+                        volume = (int)(volume - volumeBoost);
+                    }else if(volumeBoostType.equals("Divide")){
+                        volume = (int)(volume / volumeBoost);
+                    } else if(volumeBoostType.equals("Mulitply")){
+                        volume = (int)(volume * volumeBoost);
+                    }
 
-            if(volume < 0)
-                volume = 0;
+                    if(volume < 0)
+                        volume = 0;
+                }
+            }
 
             String jsonString = "";
             if(roomIdFront != null && roomIdFront != ""){
                 String[] arr = roomIdFront.split(";");
+
+                //Volume Boost Only for Front
+                if(type.equals("inc") || type.equals("dec")) {
+                    if (volumeBoostGroup.equals("Front")) {
+                        if(volumeBoostType.equals("Add")){
+                            volume = (int)(volume + volumeBoost);
+                        }else if(volumeBoostType.equals("Sub")){
+                            volume = (int)(volume - volumeBoost);
+                        }else if(volumeBoostType.equals("Divide")){
+                            volume = (int)(volume / volumeBoost);
+                        } else if(volumeBoostType.equals("Mulitply")){
+                            volume = (int)(volume * volumeBoost);
+                        }
+
+                        if(volume < 0)
+                            volume = 0;
+                    }
+                }
 
                 if(volumeCmd.contains("fixed")){
                     jsonString ="{\"type\":\"VolumeLevelCommand\",\"volumeLevel\":"+String.valueOf(volume)+",\"contentFocusClientId\":\"Default\"}";
@@ -251,20 +275,20 @@ public class MainActivity extends Activity {
             if(roomIdRear != null && roomIdRear != ""){
                 String[] arr = roomIdRear.split(";");
 
+                //Volume Difference to front
                 if(type.equals("inc") || type.equals("dec")){
+                        if(volumeDiffType.equals("Add")){
+                            volume = (int)(volume + changeVolumeDiff);
+                        }else if(volumeDiffType.equals("Sub")){
+                            volume = (int)(volume - changeVolumeDiff);
+                        } else if(volumeDiffType.equals("Divide")){
+                            volume = (int)(volume / changeVolumeDiff);
+                        } else if(volumeDiffType.equals("Mulitply")){
+                            volume = (int)(volume * changeVolumeDiff);
+                        }
 
-                    if(volumeDiffType.equals("Add")){
-                        volume = (int)(volume + changeVolumeDiff);
-                    }else if(volumeDiffType.equals("Sub")){
-                        volume = (int)(volume - changeVolumeDiff);
-                    } else if(volumeDiffType.equals("Divide")){
-                        volume = (int)(volume / changeVolumeDiff);
-                    } else if(volumeDiffType.equals("Mulitply")){
-                        volume = (int)(volume * changeVolumeDiff);
-                    }
-
-                    if(volume < 0)
-                        volume = 0;
+                        if(volume < 0)
+                            volume = 0;
                 }
 
                 if(volumeCmd.contains("fixed")){
@@ -324,6 +348,7 @@ public class MainActivity extends Activity {
         volumeBoost  = settings.getFloat("volumeBoost",0);
         volumeBoostType = settings.getString("volumeBoostType", "Add");
         volumeDiffType = settings.getString("volumeDiffType", "Sub");
+        volumeBoostGroup = settings.getString("volumeBoostGroup", "All");
 
         EditText txtusername = (EditText)findViewById(R.id.editTextUsername);
         EditText txtpassword = (EditText)findViewById(R.id.editTextPassword);
@@ -342,6 +367,8 @@ public class MainActivity extends Activity {
         RadioButton rdVolumDiffTypeSub = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeSub);
         RadioButton rdVolumDiffTypeDivide = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeDivide);
         RadioButton rdVolumDiffTypeMulitply = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeMultiply);
+        RadioButton rdVolumBoostGroupAll = (RadioButton)findViewById(R.id.radioButtonBoostGroupAll);
+        RadioButton rdVolumBoostGroupFront = (RadioButton)findViewById(R.id.radioButtonBoostGroupFront);
 
         txtusername.setText(username);
         txtpassword.setText(password);
@@ -404,6 +431,14 @@ public class MainActivity extends Activity {
             rdVolumBoostDivide.setChecked(false);
             rdVolumDiffTypeMulitply.setChecked(true);
         }
+
+        if(volumeBoostGroup.equals("All")){
+            rdVolumBoostGroupAll.setChecked(true);
+            rdVolumBoostGroupFront.setChecked(false);
+        }else if(volumeBoostGroup.equals("Front")){
+            rdVolumBoostGroupAll.setChecked(false);
+            rdVolumBoostGroupFront.setChecked(true);
+        }
     }
 
     public void SaveSettings(View view){
@@ -423,11 +458,12 @@ public class MainActivity extends Activity {
         RadioButton rdVolumBoostSub = (RadioButton)findViewById(R.id.radioButtonBoostTypeSub);
         RadioButton rdVolumBoostDivide = (RadioButton)findViewById(R.id.radioButtonBoostTypeDivide);
         RadioButton rdVolumBoostMulitply = (RadioButton)findViewById(R.id.radioButtonBootsTypeMultiply);
-
         RadioButton rdVolumDiffTypeAdd = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeAdd);
         RadioButton rdVolumDiffTypeSub = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeSub);
         RadioButton rdVolumDiffTypeDivide = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeDivide);
         RadioButton rdVolumDiffTypeMulitply = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeMultiply);
+        RadioButton rdVolumBoostGroupAll = (RadioButton)findViewById(R.id.radioButtonBoostGroupAll);
+        RadioButton rdVolumBoostGroupFront = (RadioButton)findViewById(R.id.radioButtonBoostGroupFront);
 
         username = txtusername.getText().toString();
         password = txtpassword.getText().toString();
@@ -466,6 +502,13 @@ public class MainActivity extends Activity {
             volumeDiffType = "Mulitply";
         }
 
+        volumeBoostGroup = "All";
+        if(rdVolumBoostGroupAll.isChecked()){
+            volumeBoostGroup = "All";
+        }else if(rdVolumBoostGroupFront.isChecked()){
+            volumeBoostGroup = "Front";
+        }
+
         SharedPreferences settings = getSharedPreferences(PREFER_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = settings.edit();
         editor.putString("username", username);
@@ -478,6 +521,7 @@ public class MainActivity extends Activity {
         editor.putInt("keyPressWait", keyPressWait);
         editor.putString("volumeBoostType", volumeBoostType);
         editor.putString("volumeDiffType", volumeDiffType);
+        editor.putString("volumeBoostGroup", volumeBoostGroup);
         editor.commit();
 
         if(loginDone){
