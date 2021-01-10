@@ -128,7 +128,7 @@
                     android:textSize="18sp" />
 
                 <EditText
-                    android:id="@+id/editTextRoomName"
+                    android:id="@+id/editTextRoomNameFront"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ems="10"
@@ -136,7 +136,22 @@
                     android:singleLine="true" />
 
                 <TextView
-                    android:id="@+id/textView6"
+                    android:id="@+id/textView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/lable_room_rear"
+                    android:textSize="18sp" />
+
+                <EditText
+                    android:id="@+id/editTextRoomNameRear"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="textPersonName"
+                    android:text="Name" />
+
+                <TextView
+                    android:id="@+id/textView2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/lable_volume_diff"
@@ -144,6 +159,20 @@
 
                 <EditText
                     android:id="@+id/editTextVolumeDiff"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="numberSigned" />
+
+                <TextView
+                    android:id="@+id/textView6"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/lable_keypress_wait"
+                    android:textSize="18sp" />
+
+                <EditText
+                    android:id="@+id/editTextKeyPressWait"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ems="10"
@@ -155,7 +184,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:checkedButton="@id/radioButtonVolumeFixed"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    tools:visibility="gone">
 
                     <RadioButton
                         android:id="@+id/radioButtonVolumeFixed"

@@ -8,8 +8,10 @@
     <string name="button_about">About</string>
     <string name="lable_email">eMail</string>
     <string name="lable_password">Password</string>
-    <string name="lable_room">Room Name</string>
-    <string name="lable_volume_diff">Volume KeyPress Wait (ms)</string>
+    <string name="lable_room">Room Name Front</string>
+    <string name="lable_room_rear">Room Name Rear</string>
+    <string name="lable_volume_diff">Volume Difference to front</string>
+    <string name="lable_keypress_wait">Volume KeyPress Wait (ms)</string>
     <string name="radio_button_volume_fixed">Volume Fixed Level</string>
     <string name="radio_button_volume_adjusted">Volume Adjusted</string>
 </resources>

@@ -38,9 +38,9 @@ public class SettingsContentObserver extends ContentObserver {
                     }
 
                     if(b){
-                        ((MainActivity)context).ChangeVolume(String.valueOf(0));
+                        ((MainActivity)context).ChangeVolume(0,"mute");
                     }else{
-                        ((MainActivity)context).ChangeVolume(String.valueOf(previousVolume));
+                        ((MainActivity)context).ChangeVolume(previousVolume,"unmute");
                     }
                 }
             }
@@ -62,7 +62,7 @@ public class SettingsContentObserver extends ContentObserver {
             return;
 
         isCheckRunning = true;
-        int waitTime = ((MainActivity)this.context).changeVolumeDiff;
+        int waitTime = ((MainActivity)this.context).keyPressWait;
         while (true) {
             try {
                 Thread.sleep(waitTime);
@@ -78,8 +78,16 @@ public class SettingsContentObserver extends ContentObserver {
             }
         }
 
+        String type = "";
+        int delta = previousVolume - currentVolume;
+        if (delta > 0) {
+            type = "dec";
+        } else if (delta < 0) {
+            type = "inc";
+        }
+
         previousVolume = currentVolume;
-        ((MainActivity) context).ChangeVolume(String.valueOf(currentVolume));
+        ((MainActivity) context).ChangeVolume(currentVolume,type);
         isCheckRunning = false;
     }
 

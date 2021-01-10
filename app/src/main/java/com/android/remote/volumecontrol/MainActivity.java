@@ -2,52 +2,32 @@ package com.android.remote.volumecontrol;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.DownloadManager;
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.media.AudioManager;
-import android.media.AudioPlaybackCaptureConfiguration;
-import android.media.AudioPlaybackConfiguration;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
-import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 
-import androidx.annotation.RequiresApi;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.HttpURLConnection;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 /*
@@ -64,14 +44,16 @@ public class MainActivity extends Activity {
     private String Cookies = "";
     private String Csrf = "";
     private JSONArray deviceList;
-    private Map<String,String> roomDevices;
-    private Map<String,String> multiRooms;
+    private String roomIdFront = "";
+    private String roomIdRear = "";
 
     //Settings to Store
     public Integer changeVolumeDiff = 0;
+    public Integer keyPressWait = 0;
     public String alexaLoginUrl = "alexa.amazon.de";
     public String alexaBaseURI = "alexa.amazon.de";
-    private String roomName = "";
+    private String roomNameFront = "";
+    private String roomNameRear = "";
     private String username = "";
     private String password = "";
     private String volumeCmd = "";
@@ -126,33 +108,21 @@ public class MainActivity extends Activity {
                                 @Override
                                 public void onReceiveValue(String html) {
                                     try {
-                                        multiRooms = new HashMap<>();
-
                                         JSONObject objDeviceList = new JSONObject(html);
                                         deviceList = objDeviceList.getJSONArray("devices");
 
                                         JSONArray arrRoomDevices = null;
                                         for(int i=0; i<deviceList.length(); i++){
                                             JSONObject o = deviceList.getJSONObject(i);
-                                            if(o.getString("accountName").contains(roomName)){
-                                                multiRooms.put(o.getString("serialNumber"),o.getString("deviceType"));
-                                                arrRoomDevices = o.getJSONArray("clusterMembers");
+                                            if(o.getString("accountName").equals(roomNameFront)){
+                                                roomIdFront = o.getString("serialNumber") +";"+ o.getString("deviceType");
+                                            } else if(o.getString("accountName").equals(roomNameRear)){
+                                                roomIdRear = o.getString("serialNumber") +";"+ o.getString("deviceType");
+                                            }
+
+                                            if(roomIdFront != "" && roomIdRear != "")
                                                 break;
-                                            }
                                         }
-
-                                        roomDevices = new HashMap<>();
-                                        for(int j=0; j<arrRoomDevices.length(); j++) {
-                                            String serialNumber = arrRoomDevices.getString(j);
-                                            for(int i=0; i<deviceList.length(); i++){
-                                                JSONObject o = deviceList.getJSONObject(i);
-                                                if(o.getString("serialNumber").contains(serialNumber)){
-                                                    roomDevices.put(serialNumber,o.getString("deviceType"));
-                                                    break;
-                                                }
-                                            }
-                                        }
-
                                     } catch (JSONException e) {
                                         e.printStackTrace();
                                     }
@@ -239,30 +209,42 @@ public class MainActivity extends Activity {
         return false;
     }
 
-    public void ChangeVolume(String volume) {
+    public void ChangeVolume(Integer volume,String type) {
 
         try{
-            if(multiRooms == null || volumeCmd == "")
+            if(roomIdFront == null || roomIdFront == "" || volumeCmd == "")
                 return;
 
             String jsonString = "";
-            if(volumeCmd.contains("fixed")){
-                jsonString ="{\"type\":\"VolumeLevelCommand\",\"volumeLevel\":"+volume+",\"contentFocusClientId\":\"Default\"}";
-            }else{
-                jsonString ="{\"type\":\"VolumeAdjustCommand\",\"volumeAdjustment\":"+volume+",\"contentFocusClientId\":\"Default\"}";
+            if(roomIdFront != null && roomIdFront != ""){
+                String[] arr = roomIdFront.split(";");
+
+                if(volumeCmd.contains("fixed")){
+                    jsonString ="{\"type\":\"VolumeLevelCommand\",\"volumeLevel\":"+String.valueOf(volume)+",\"contentFocusClientId\":\"Default\"}";
+                }else{
+                    jsonString ="{\"type\":\"VolumeAdjustCommand\",\"volumeAdjustment\":"+String.valueOf(volume)+",\"contentFocusClientId\":\"Default\"}";
+                }
+                sendAlexaCommand(arr[0],arr[1],jsonString);
+            }
+            if(roomIdRear != null && roomIdRear != ""){
+                String[] arr = roomIdRear.split(";");
+
+                if(type.equals("inc") || type.equals("dec")){
+                    Integer tmpVol = volume - changeVolumeDiff;
+                    if(tmpVol <= 0)
+                        volume = changeVolumeDiff;
+                    else
+                        volume = volume - changeVolumeDiff;
+                }
+
+                if(volumeCmd.contains("fixed")){
+                    jsonString ="{\"type\":\"VolumeLevelCommand\",\"volumeLevel\":"+String.valueOf(volume)+",\"contentFocusClientId\":\"Default\"}";
+                }else{
+                    jsonString ="{\"type\":\"VolumeAdjustCommand\",\"volumeAdjustment\":"+String.valueOf(volume)+",\"contentFocusClientId\":\"Default\"}";
+                }
+                sendAlexaCommand(arr[0],arr[1],jsonString);
             }
 
-            for (Map.Entry<String, String> entry : multiRooms.entrySet()) {
-                sendAlexaCommand(entry.getKey(),entry.getValue(),jsonString);
-            }
-
-            /*
-            //Change Volume for Devices
-            String jsonStringSingle ="{\"type\":\"VolumeLevelCommand\",\"volumeLevel\":"+volume+",\"contentFocusClientId\":null}";
-            for (Map.Entry<String, String> entry : roomDevices.entrySet()) {
-                sendAlexaCommand(entry.getKey(),entry.getValue(),jsonStringSingle);
-            }
-            */
         }catch(Exception ex){
             ex.printStackTrace();
         }
@@ -300,21 +282,28 @@ public class MainActivity extends Activity {
         SharedPreferences settings = getSharedPreferences(PREFER_NAME, MODE_PRIVATE);
         username = settings.getString("username", "");
         password = settings.getString("password", "");
-        roomName = settings.getString("roomName", "Wohnzimmer");
+        roomNameFront = settings.getString("roomNameFront", "WohnzimmerFront");
+        roomNameRear = settings.getString("roomNameRear", "WohnzimmerRear");
         volumeCmd = settings.getString("volumeCmd","fixed");
-        changeVolumeDiff = settings.getInt("changeVolumeDiff", 250);
+        changeVolumeDiff = settings.getInt("changeVolumeDiff", 0);
+        keyPressWait = settings.getInt("keyPressWait",250);
 
         EditText txtusername = (EditText)findViewById(R.id.editTextUsername);
         EditText txtpassword = (EditText)findViewById(R.id.editTextPassword);
-        EditText txtroomName = (EditText)findViewById(R.id.editTextRoomName);
+        EditText txtRoomNameFront = (EditText)findViewById(R.id.editTextRoomNameFront);
+        EditText txtroomNameRear = (EditText)findViewById(R.id.editTextRoomNameRear);
         EditText txtchangeVolumeDiff = (EditText)findViewById(R.id.editTextVolumeDiff);
+        EditText txtKeyPressWait = (EditText)findViewById(R.id.editTextKeyPressWait);
         RadioButton rdVolumeFixed = (RadioButton)findViewById(R.id.radioButtonVolumeFixed);
         RadioButton rdVolumeAdjusted = (RadioButton)findViewById(R.id.radioButtonVolumeAdjusted);
 
         txtusername.setText(username);
         txtpassword.setText(password);
-        txtroomName.setText(roomName);
+        txtRoomNameFront.setText(roomNameFront);
+        txtroomNameRear.setText(roomNameRear);
+        txtKeyPressWait.setText(String.valueOf(keyPressWait));
         txtchangeVolumeDiff.setText(String.valueOf(changeVolumeDiff));
+
         if(volumeCmd.contains("fixed")){
             rdVolumeFixed.setChecked(true);
             rdVolumeAdjusted.setChecked(false);
@@ -330,15 +319,19 @@ public class MainActivity extends Activity {
         //Save and Reload ....
         EditText txtusername = (EditText)findViewById(R.id.editTextUsername);
         EditText txtpassword = (EditText)findViewById(R.id.editTextPassword);
-        EditText txtroomName = (EditText)findViewById(R.id.editTextRoomName);
+        EditText txtroomNameFront = (EditText)findViewById(R.id.editTextRoomNameFront);
+        EditText txtroomNameRear = (EditText)findViewById(R.id.editTextRoomNameRear);
         EditText txtchangeVolumeDiff = (EditText)findViewById(R.id.editTextVolumeDiff);
+        EditText txtKeyPressWait = (EditText)findViewById(R.id.editTextKeyPressWait);
         RadioButton rdVolumeFixed = (RadioButton)findViewById(R.id.radioButtonVolumeFixed);
         RadioButton rdVolumeAdjusted = (RadioButton)findViewById(R.id.radioButtonVolumeAdjusted);
 
         username = txtusername.getText().toString();
         password = txtpassword.getText().toString();
-        roomName = txtroomName.getText().toString();
+        roomNameFront = txtroomNameFront.getText().toString();
+        roomNameRear = txtroomNameRear.getText().toString();
         changeVolumeDiff = Integer.valueOf(txtchangeVolumeDiff.getText().toString());
+        keyPressWait = Integer.valueOf(txtKeyPressWait.getText().toString());
         volumeCmd = "fixed";
         if(rdVolumeFixed.isChecked()){
             volumeCmd = "fixed";
@@ -350,16 +343,18 @@ public class MainActivity extends Activity {
         SharedPreferences.Editor editor = settings.edit();
         editor.putString("username", username);
         editor.putString("password", password);
-        editor.putString("roomName", roomName);
+        editor.putString("roomNameFront", roomNameFront);
+        editor.putString("roomNameRear", roomNameRear);
         editor.putString("volumeCmd", volumeCmd);
         editor.putInt("changeVolumeDiff", changeVolumeDiff);
+        editor.putInt("keyPressWait", keyPressWait);
         editor.commit();
 
         DoLogin(view);
     }
 
     public void ShowAbout(View view){
-        alexaViewer.loadData("<h1>Alexa Volume Control</h1><h2>Version: "+Build.VERSION.CODENAME+"</h2>","text/html","UTF-8");
+        alexaViewer.loadData("<h1>Alexa Volume Control</h1><h2>Version: "+BuildConfig.VERSION_NAME+"</h2>","text/html","UTF-8");
     }
 
     @Override
