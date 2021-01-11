@@ -3,6 +3,7 @@ package com.android.remote.volumecontrol;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.StrictMode;
@@ -29,6 +30,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /*
  * Main Activity class that loads {@link MainFragment}.
@@ -50,7 +53,7 @@ public class MainActivity extends Activity {
     private String alexPostResult = "";
 
     //Debug on/off
-    public boolean debugOutPut = false;
+    public boolean debugOutPut = true;
 
     //Settings to Store
     public String volumeBoostGroup = "";
@@ -156,11 +159,18 @@ public class MainActivity extends Activity {
         }else{
             ShowSettings(null);
         }
-
     }
 
-    private Boolean sendAlexaCommand(String DeviceSerial, String DeviceType,String jsonString) {
+    private Boolean sendAlexaCommand(String DeviceSerial, String DeviceType,Integer Volume) {
+
         try {
+            String jsonString = "";
+            if(volumeCmd.contains("fixed")){
+                jsonString ="{\"type\":\"VolumeLevelCommand\",\"volumeLevel\":"+Volume+",\"contentFocusClientId\":\"Default\"}";
+            }else{
+                jsonString ="{\"type\":\"VolumeAdjustCommand\",\"volumeAdjustment\":"+Volume+",\"contentFocusClientId\":\"Default\"}";
+            }
+
             URL url = new URL("https://"+alexaBaseURI+"/api/np/command?deviceSerialNumber="+DeviceSerial+"&deviceType="+DeviceType);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
@@ -196,10 +206,10 @@ public class MainActivity extends Activity {
             }else{
                 if(debugOutPut){
                     Calendar c = Calendar.getInstance();
-                    SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+                    SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss.SSS");
                     String formattedDate = df.format(c.getTime());
-                    alexPostResult += "<h2>"+formattedDate+" Volume ("+volumeCmd+") Changed for type: "+DeviceType+" serial:"+DeviceSerial+"</h2>";
-                    Log.d(TAG,"Volume Changed for type: "+DeviceType+" serial:"+DeviceSerial);
+                    alexPostResult += "<h2>"+formattedDate+" Volume ("+volumeCmd+") Changed to "+Volume+" for type: "+DeviceType+" serial:"+DeviceSerial+"</h2>";
+                    Log.d(TAG,alexPostResult);
                 }
             }
 
@@ -214,12 +224,10 @@ public class MainActivity extends Activity {
     public void ChangeVolume(Integer volume,String type) {
 
         if( !alexPostResult.isEmpty() || debugOutPut)
-            alexaViewer.loadData("<1>Previous Result:</h1><br />"+alexPostResult,"text/html","UTF-8");
+            alexaViewer.loadData("<h1>Previous Result:</h1><br />"+alexPostResult,"text/html","UTF-8");
 
         alexPostResult = "";
-        String jsonString = "";
         try{
-
             //Volume Boost for All
             if(type.equals("inc") || type.equals("dec")) {
                 if (volumeBoostGroup.equals("All")) {
@@ -233,71 +241,59 @@ public class MainActivity extends Activity {
                         volume = (int)(volume * volumeBoost);
                     }
 
-                    if(volume < 0)
-                        volume = 0;
+                    if(volume <= 0)
+                        volume = 1;
                 }
             }
 
             //Front Devices
-            for (Map.Entry<String, String> entry : frontDevices.entrySet()) {
-
-                //Volume Boost Only for Front
-                if(type.equals("inc") || type.equals("dec")) {
-                    if (volumeBoostGroup.equals("Front")) {
-                        if(volumeBoostType.equals("Add")){
-                            volume = (int)(volume + volumeBoost);
-                        }else if(volumeBoostType.equals("Sub")){
-                            volume = (int)(volume - volumeBoost);
-                        }else if(volumeBoostType.equals("Divide")){
-                            volume = (int)(volume / volumeBoost);
-                        } else if(volumeBoostType.equals("Mulitply")){
-                            volume = (int)(volume * volumeBoost);
-                        }
-
-                        if(volume < 0)
-                            volume = 0;
+            //Volume Boost Only for Front
+            Integer volumeFront = volume;
+            if(type.equals("inc") || type.equals("dec")) {
+                if (volumeBoostGroup.equals("Front")) {
+                    if(volumeBoostType.equals("Add")){
+                        volumeFront = (int)(volumeFront + volumeBoost);
+                    }else if(volumeBoostType.equals("Sub")){
+                        volumeFront = (int)(volumeFront - volumeBoost);
+                    }else if(volumeBoostType.equals("Divide")){
+                        volumeFront = (int)(volumeFront / volumeBoost);
+                    } else if(volumeBoostType.equals("Mulitply")){
+                        volumeFront = (int)(volumeFront * volumeBoost);
                     }
-                }
 
-                if(volumeCmd.contains("fixed")){
-                    jsonString ="{\"type\":\"VolumeLevelCommand\",\"volumeLevel\":"+volume+",\"contentFocusClientId\":\"Default\"}";
-                }else{
-                    jsonString ="{\"type\":\"VolumeAdjustCommand\",\"volumeAdjustment\":"+volume+",\"contentFocusClientId\":\"Default\"}";
+                    if(volumeFront <= 0)
+                        volumeFront = 1;
                 }
+            }
 
-                String finalJsonString = jsonString;
-                new Thread(() -> sendAlexaCommand(entry.getKey() , entry.getValue(), finalJsonString)).start();
-                //sendAlexaCommand(entry.getKey() , entry.getValue(),jsonString);
+            for (Map.Entry<String, String> entry : frontDevices.entrySet()) {
+                Integer finalVolume = volumeFront;
+                new Thread(() -> sendAlexaCommand(entry.getKey() , entry.getValue(), finalVolume)).start();
+                //sendAlexaCommand(entry.getKey() , entry.getValue(),finalVolume);
             }
 
             //Rear Devices
+            //Volume Difference to front
+            Integer volumeRear = volume;
+            if(type.equals("inc") || type.equals("dec")){
+                if(volumeDiffType.equals("Add")){
+                    volumeRear = (int)(volumeRear + changeVolumeDiff);
+                }else if(volumeDiffType.equals("Sub")){
+                    volumeRear = (int)(volumeRear - changeVolumeDiff);
+                } else if(volumeDiffType.equals("Divide")){
+                    volumeRear = (int)(volumeRear / changeVolumeDiff);
+                } else if(volumeDiffType.equals("Mulitply")){
+                    volumeRear = (int)(volumeRear * changeVolumeDiff);
+                }
+
+                if(volumeRear < 0)
+                    volumeRear = 0;
+            }
+
             for (Map.Entry<String, String> entry : rearDevices.entrySet()) {
-
-                //Volume Difference to front
-                if(type.equals("inc") || type.equals("dec")){
-                    if(volumeDiffType.equals("Add")){
-                        volume = (int)(volume + changeVolumeDiff);
-                    }else if(volumeDiffType.equals("Sub")){
-                        volume = (int)(volume - changeVolumeDiff);
-                    } else if(volumeDiffType.equals("Divide")){
-                        volume = (int)(volume / changeVolumeDiff);
-                    } else if(volumeDiffType.equals("Mulitply")){
-                        volume = (int)(volume * changeVolumeDiff);
-                    }
-
-                    if(volume < 0)
-                        volume = 0;
-                }
-
-                if(volumeCmd.contains("fixed")){
-                    jsonString ="{\"type\":\"VolumeLevelCommand\",\"volumeLevel\":"+volume+",\"contentFocusClientId\":\"Default\"}";
-                }else{
-                    jsonString ="{\"type\":\"VolumeAdjustCommand\",\"volumeAdjustment\":"+volume+",\"contentFocusClientId\":\"Default\"}";
-                }
-
-                String finalJsonString = jsonString;
-                new Thread(() -> sendAlexaCommand(entry.getKey() , entry.getValue(), finalJsonString)).start();
-                //sendAlexaCommand(entry.getKey() , entry.getValue(),jsonString);
+                Integer finalVolume = volumeRear;
+                new Thread(() -> sendAlexaCommand(entry.getKey() , entry.getValue(), finalVolume)).start();
+                //sendAlexaCommand(entry.getKey() , entry.getValue(),finalVolume);
             }
 
         }catch (Exception ex){
