@@ -44,9 +44,8 @@ public class MainActivity extends Activity {
     private boolean settingsVisible = false;
     private String Cookies = "";
     private String Csrf = "";
-    private JSONArray deviceList;
-    private String roomIdFront = "";
-    private String roomIdRear = "";
+    private Map<String,String> frontDevices;
+    private Map<String,String> rearDevices;
 
     //Settings to Store
     public String volumeBoostGroup = "";
@@ -115,20 +114,9 @@ public class MainActivity extends Activity {
                                 public void onReceiveValue(String html) {
                                     try {
                                         JSONObject objDeviceList = new JSONObject(html);
-                                        deviceList = objDeviceList.getJSONArray("devices");
-
-                                        JSONArray arrRoomDevices = null;
-                                        for(int i=0; i<deviceList.length(); i++){
-                                            JSONObject o = deviceList.getJSONObject(i);
-                                            if(o.getString("accountName").equals(roomNameFront)){
-                                                roomIdFront = o.getString("serialNumber") +";"+ o.getString("deviceType");
-                                            } else if(o.getString("accountName").equals(roomNameRear)){
-                                                roomIdRear = o.getString("serialNumber") +";"+ o.getString("deviceType");
-                                            }
-
-                                            if(roomIdFront != "" && roomIdRear != "")
-                                                break;
-                                        }
+                                        JSONArray deviceList = objDeviceList.getJSONArray("devices");
+                                        frontDevices = GetDeviceByName(roomNameFront,deviceList);
+                                        rearDevices = GetDeviceByName(roomNameRear,deviceList);
                                     } catch (JSONException e) {
                                         e.printStackTrace();
                                     }
@@ -220,9 +208,8 @@ public class MainActivity extends Activity {
 
     public void ChangeVolume(Integer volume,String type) {
 
+        String jsonString = "";
         try{
-            if(roomIdFront == null || roomIdFront == "" || volumeCmd == "")
-                return;
 
             //Volume Boost for All
             if(type.equals("inc") || type.equals("dec")) {
@@ -242,9 +229,8 @@ public class MainActivity extends Activity {
                 }
             }
 
-            String jsonString = "";
-            if(roomIdFront != null && roomIdFront != ""){
-                String[] arr = roomIdFront.split(";");
+            //Front Devices
+            for (Map.Entry<String, String> entry : frontDevices.entrySet()) {
 
                 //Volume Boost Only for Front
                 if(type.equals("inc") || type.equals("dec")) {
@@ -269,25 +255,26 @@ public class MainActivity extends Activity {
                 }else{
                     jsonString ="{\"type\":\"VolumeAdjustCommand\",\"volumeAdjustment\":"+String.valueOf(volume)+",\"contentFocusClientId\":\"Default\"}";
                 }
-                sendAlexaCommand(arr[0],arr[1],jsonString);
+                sendAlexaCommand(entry.getKey() , entry.getValue(),jsonString);
             }
-            if(roomIdRear != null && roomIdRear != ""){
-                String[] arr = roomIdRear.split(";");
+
+            //Rear Devices
+            for (Map.Entry<String, String> entry : rearDevices.entrySet()) {
 
                 //Volume Difference to front
                 if(type.equals("inc") || type.equals("dec")){
-                        if(volumeDiffType.equals("Add")){
-                            volume = (int)(volume + changeVolumeDiff);
-                        }else if(volumeDiffType.equals("Sub")){
-                            volume = (int)(volume - changeVolumeDiff);
-                        } else if(volumeDiffType.equals("Divide")){
-                            volume = (int)(volume / changeVolumeDiff);
-                        } else if(volumeDiffType.equals("Mulitply")){
-                            volume = (int)(volume * changeVolumeDiff);
-                        }
+                    if(volumeDiffType.equals("Add")){
+                        volume = (int)(volume + changeVolumeDiff);
+                    }else if(volumeDiffType.equals("Sub")){
+                        volume = (int)(volume - changeVolumeDiff);
+                    } else if(volumeDiffType.equals("Divide")){
+                        volume = (int)(volume / changeVolumeDiff);
+                    } else if(volumeDiffType.equals("Mulitply")){
+                        volume = (int)(volume * changeVolumeDiff);
+                    }
 
-                        if(volume < 0)
-                            volume = 0;
+                    if(volume < 0)
+                        volume = 0;
                 }
 
                 if(volumeCmd.contains("fixed")){
@@ -295,10 +282,10 @@ public class MainActivity extends Activity {
                 }else{
                     jsonString ="{\"type\":\"VolumeAdjustCommand\",\"volumeAdjustment\":"+String.valueOf(volume)+",\"contentFocusClientId\":\"Default\"}";
                 }
-                sendAlexaCommand(arr[0],arr[1],jsonString);
+                sendAlexaCommand(entry.getKey() , entry.getValue(),jsonString);
             }
 
-        }catch(Exception ex){
+        }catch (Exception ex){
             ex.printStackTrace();
         }
     }
@@ -535,6 +522,27 @@ public class MainActivity extends Activity {
             ShowSettings(view);
 
         alexaViewer.loadData("<h1>Alexa Volume Control</h1><h2>Version: "+BuildConfig.VERSION_NAME+"</h2>","text/html","UTF-8");
+    }
+
+    private Map<String,String> GetDeviceByName(String name,JSONArray deviceList){
+
+        Map<String,String> retMap = new HashMap<>();
+        String[] arrNames = name.split(";");
+
+        try {
+            for(int n=0; n<arrNames.length; n++){
+                for(int i=0; i<deviceList.length(); i++){
+                    JSONObject o = deviceList.getJSONObject(i);
+                    if(o.getString("accountName").equals(arrNames[n])){
+                        retMap.put(o.getString("serialNumber"),o.getString("deviceType"));
+                        break;
+                    }
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return retMap;
     }
 
     @Override
