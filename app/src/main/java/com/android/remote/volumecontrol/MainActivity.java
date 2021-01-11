@@ -35,6 +35,7 @@ import java.util.Map;
  */
 public class MainActivity extends Activity {
 
+    //General Variables
     private static final String PREFER_NAME = "settingsMain";
     private SettingsContentObserver mSettingsContentObserver;
     private WebView alexaViewer;
@@ -46,6 +47,10 @@ public class MainActivity extends Activity {
     private String Csrf = "";
     private Map<String,String> frontDevices;
     private Map<String,String> rearDevices;
+    private String alexPostResult = "";
+
+    //Debug on/off
+    public boolean debugOutPut = false;
 
     //Settings to Store
     public String volumeBoostGroup = "";
@@ -96,7 +101,7 @@ public class MainActivity extends Activity {
                     alexaViewer.evaluateJavascript(js, new ValueCallback<String>() {
                         @Override
                         public void onReceiveValue(String s) {
-                            String result = s;
+                            //String result = s;
                         }
                     });
                 }else if(url.contains("/spa/index.html")){
@@ -142,7 +147,7 @@ public class MainActivity extends Activity {
 
         LoadSettings();
 
-        if(username != "" && password != ""){
+        if(!username.isEmpty() && !password.isEmpty()){
             if(loginDone){
                 ReLoadDevices();
             }else{
@@ -184,21 +189,21 @@ public class MainActivity extends Activity {
             conn.disconnect();
 
             if(conn.getResponseCode() != 200) {
-                alexaViewer.loadData(mes,"text/html","UTF-8");
-                Log.d(TAG,"Could not change volume for type: "+DeviceType+" serial:"+DeviceSerial);
+                alexPostResult += mes+"<br/>";
+
+                if(debugOutPut)
+                    Log.d(TAG,mes);
             }else{
-                Calendar c = Calendar.getInstance();
-                SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-                String formattedDate = df.format(c.getTime());
-                alexaViewer.loadData("<h1>"+formattedDate+" Volume ("+volumeCmd+") Changed for type: "+DeviceType+" serial:"+DeviceSerial+"</h1>","text/html","UTF-8");
-                Log.d(TAG,"Volume Changed for type: "+DeviceType+" serial:"+DeviceSerial);
+                if(debugOutPut){
+                    Calendar c = Calendar.getInstance();
+                    SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+                    String formattedDate = df.format(c.getTime());
+                    alexPostResult += "<h2>"+formattedDate+" Volume ("+volumeCmd+") Changed for type: "+DeviceType+" serial:"+DeviceSerial+"</h2>";
+                    Log.d(TAG,"Volume Changed for type: "+DeviceType+" serial:"+DeviceSerial);
+                }
             }
 
-            if (mes!=null && !mes.isEmpty()){
-                return true;
-            }else {
-                return false;
-            }
+            return mes != null && !mes.isEmpty();
 
         }catch (Exception e) {
             e.printStackTrace();
@@ -208,6 +213,10 @@ public class MainActivity extends Activity {
 
     public void ChangeVolume(Integer volume,String type) {
 
+        if( !alexPostResult.isEmpty() || debugOutPut)
+            alexaViewer.loadData("<1>Previous Result:</h1><br />"+alexPostResult,"text/html","UTF-8");
+
+        alexPostResult = "";
         String jsonString = "";
         try{
 
@@ -251,11 +260,14 @@ public class MainActivity extends Activity {
                 }
 
                 if(volumeCmd.contains("fixed")){
-                    jsonString ="{\"type\":\"VolumeLevelCommand\",\"volumeLevel\":"+String.valueOf(volume)+",\"contentFocusClientId\":\"Default\"}";
+                    jsonString ="{\"type\":\"VolumeLevelCommand\",\"volumeLevel\":"+volume+",\"contentFocusClientId\":\"Default\"}";
                 }else{
-                    jsonString ="{\"type\":\"VolumeAdjustCommand\",\"volumeAdjustment\":"+String.valueOf(volume)+",\"contentFocusClientId\":\"Default\"}";
+                    jsonString ="{\"type\":\"VolumeAdjustCommand\",\"volumeAdjustment\":"+volume+",\"contentFocusClientId\":\"Default\"}";
                 }
-                sendAlexaCommand(entry.getKey() , entry.getValue(),jsonString);
+
+                String finalJsonString = jsonString;
+                new Thread(() -> sendAlexaCommand(entry.getKey() , entry.getValue(), finalJsonString)).start();
+                //sendAlexaCommand(entry.getKey() , entry.getValue(),jsonString);
             }
 
             //Rear Devices
@@ -278,11 +290,14 @@ public class MainActivity extends Activity {
                 }
 
                 if(volumeCmd.contains("fixed")){
-                    jsonString ="{\"type\":\"VolumeLevelCommand\",\"volumeLevel\":"+String.valueOf(volume)+",\"contentFocusClientId\":\"Default\"}";
+                    jsonString ="{\"type\":\"VolumeLevelCommand\",\"volumeLevel\":"+volume+",\"contentFocusClientId\":\"Default\"}";
                 }else{
-                    jsonString ="{\"type\":\"VolumeAdjustCommand\",\"volumeAdjustment\":"+String.valueOf(volume)+",\"contentFocusClientId\":\"Default\"}";
+                    jsonString ="{\"type\":\"VolumeAdjustCommand\",\"volumeAdjustment\":"+volume+",\"contentFocusClientId\":\"Default\"}";
                 }
-                sendAlexaCommand(entry.getKey() , entry.getValue(),jsonString);
+
+                String finalJsonString = jsonString;
+                new Thread(() -> sendAlexaCommand(entry.getKey() , entry.getValue(), finalJsonString)).start();
+                //sendAlexaCommand(entry.getKey() , entry.getValue(),jsonString);
             }
 
         }catch (Exception ex){
@@ -305,7 +320,7 @@ public class MainActivity extends Activity {
         alexaViewer.evaluateJavascript(js, new ValueCallback<String>() {
             @Override
             public void onReceiveValue(String s) {
-                String result = s;
+                //String result = s;
             }
         });
     }
@@ -508,7 +523,7 @@ public class MainActivity extends Activity {
         editor.putString("volumeBoostType", volumeBoostType);
         editor.putString("volumeDiffType", volumeDiffType);
         editor.putString("volumeBoostGroup", volumeBoostGroup);
-        editor.commit();
+        editor.apply();
 
         if(loginDone){
             ReLoadDevices();
@@ -530,11 +545,11 @@ public class MainActivity extends Activity {
         String[] arrNames = name.split(";");
 
         try {
-            for(int n=0; n<arrNames.length; n++){
-                for(int i=0; i<deviceList.length(); i++){
+            for (String arrName : arrNames) {
+                for (int i = 0; i < deviceList.length(); i++) {
                     JSONObject o = deviceList.getJSONObject(i);
-                    if(o.getString("accountName").equals(arrNames[n])){
-                        retMap.put(o.getString("serialNumber"),o.getString("deviceType"));
+                    if (o.getString("accountName").equals(arrName)) {
+                        retMap.put(o.getString("serialNumber"), o.getString("deviceType"));
                         break;
                     }
                 }

@@ -61,6 +61,10 @@ public class SettingsContentObserver extends ContentObserver {
         if (isCheckRunning || currentVolume == previousVolume)
             return;
 
+        if(((MainActivity)context).debugOutPut){
+            Log.d("VolumeListener","Received Volume Current:"+currentVolume+ " Previous:"+previousVolume);
+        }
+
         isCheckRunning = true;
         int waitTime = ((MainActivity)this.context).keyPressWait;
         while (true) {
@@ -84,6 +88,10 @@ public class SettingsContentObserver extends ContentObserver {
             type = "dec";
         } else if (delta < 0) {
             type = "inc";
+        }
+
+        if(((MainActivity)context).debugOutPut){
+            Log.d("VolumeListener","Set Volume Type: "+type+" Current:"+currentVolume+ " Previous:"+previousVolume);
         }
 
         previousVolume = currentVolume;
