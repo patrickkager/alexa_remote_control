@@ -243,6 +243,9 @@ public class MainActivity extends Activity {
                     if(volume <= 0)
                         volume = 1;
                 }
+
+                if(volume > 100)
+                    volume = 99;
             }
 
             //Front Devices
@@ -263,6 +266,9 @@ public class MainActivity extends Activity {
                     if(volumeFront <= 0)
                         volumeFront = 1;
                 }
+
+                if(volumeFront > 100)
+                    volumeFront = 99;
             }
 
             for (Map.Entry<String, String> entry : frontDevices.entrySet()) {
@@ -286,7 +292,10 @@ public class MainActivity extends Activity {
                 }
 
                 if(volumeRear < 0)
-                    volumeRear = 0;
+                    volumeRear = 1;
+
+                if(volumeRear > 100)
+                    volumeRear = 99;
             }
 
             for (Map.Entry<String, String> entry : rearDevices.entrySet()) {
