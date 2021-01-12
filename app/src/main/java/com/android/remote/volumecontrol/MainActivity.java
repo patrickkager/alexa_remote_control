@@ -13,6 +13,7 @@ import android.webkit.CookieManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
@@ -52,9 +53,6 @@ public class MainActivity extends Activity {
     private Map<String,String> rearDevices;
     private String alexPostResult = "";
 
-    //Debug on/off
-    public boolean debugOutPut = true;
-
     //Settings to Store
     public String volumeBoostGroup = "";
     public String volumeDiffType = "";
@@ -69,6 +67,7 @@ public class MainActivity extends Activity {
     private String username = "";
     private String password = "";
     private String volumeCmd = "";
+    public boolean debugOutPut = false;
 
 
     @SuppressLint("JavascriptInterface")
@@ -346,6 +345,7 @@ public class MainActivity extends Activity {
         volumeBoostType = settings.getString("volumeBoostType", "Add");
         volumeDiffType = settings.getString("volumeDiffType", "Sub");
         volumeBoostGroup = settings.getString("volumeBoostGroup", "All");
+        debugOutPut = settings.getBoolean("debugMode", false);
 
         EditText txtusername = (EditText)findViewById(R.id.editTextUsername);
         EditText txtpassword = (EditText)findViewById(R.id.editTextPassword);
@@ -366,6 +366,7 @@ public class MainActivity extends Activity {
         RadioButton rdVolumDiffTypeMulitply = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeMultiply);
         RadioButton rdVolumBoostGroupAll = (RadioButton)findViewById(R.id.radioButtonBoostGroupAll);
         RadioButton rdVolumBoostGroupFront = (RadioButton)findViewById(R.id.radioButtonBoostGroupFront);
+        CheckBox chkDebugMode = (CheckBox)findViewById(R.id.checkBoxDebugMode);
 
         txtusername.setText(username);
         txtpassword.setText(password);
@@ -374,6 +375,7 @@ public class MainActivity extends Activity {
         txtKeyPressWait.setText(String.valueOf(keyPressWait));
         txtchangeVolumeDiff.setText(String.valueOf(changeVolumeDiff));
         txtVolumeBoost.setText(String.valueOf(volumeBoost));
+        chkDebugMode.setChecked(debugOutPut);
 
         if(volumeCmd.contains("fixed")){
             rdVolumeFixed.setChecked(true);
@@ -461,6 +463,7 @@ public class MainActivity extends Activity {
         RadioButton rdVolumDiffTypeMulitply = (RadioButton)findViewById(R.id.radioButtonVolumeDiffTypeMultiply);
         RadioButton rdVolumBoostGroupAll = (RadioButton)findViewById(R.id.radioButtonBoostGroupAll);
         RadioButton rdVolumBoostGroupFront = (RadioButton)findViewById(R.id.radioButtonBoostGroupFront);
+        CheckBox chkDebugMode = (CheckBox)findViewById(R.id.checkBoxDebugMode);
 
         username = txtusername.getText().toString();
         password = txtpassword.getText().toString();
@@ -469,6 +472,7 @@ public class MainActivity extends Activity {
         keyPressWait = Integer.valueOf(txtKeyPressWait.getText().toString());
         changeVolumeDiff = Float.valueOf(txtchangeVolumeDiff.getText().toString());
         volumeBoost  = Float.valueOf(txtVolumeBoost.getText().toString());
+        debugOutPut = chkDebugMode.isChecked();
 
         volumeCmd = "fixed";
         if(rdVolumeFixed.isChecked()){
@@ -519,6 +523,7 @@ public class MainActivity extends Activity {
         editor.putString("volumeBoostType", volumeBoostType);
         editor.putString("volumeDiffType", volumeDiffType);
         editor.putString("volumeBoostGroup", volumeBoostGroup);
+        editor.putBoolean("debugMode",debugOutPut);
         editor.apply();
 
         if(loginDone){

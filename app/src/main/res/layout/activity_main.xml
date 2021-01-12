@@ -320,6 +320,12 @@
                             android:text="@string/radio_button_volume_adjusted" />
                     </RadioGroup>
 
+                    <CheckBox
+                        android:id="@+id/checkBoxDebugMode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/lable_debug_mode" />
+
                     <Button
                         android:id="@+id/buttonSaveSettings"
                         style="@style/Widget.AppCompat.Button"

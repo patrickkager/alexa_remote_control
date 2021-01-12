@@ -18,6 +18,7 @@
     <string name="lable_volume_boost_type">Volume Boost Mode</string>
     <string name="lable_volume_diff_type">Volume Difference Rear to Front Mode</string>
     <string name="lable_volume_boost_mode">Volume Boost Group</string>
+    <string name="lable_debug_mode">Debug</string>
     <string name="radio_button_volume_boost_mode_to_all">Front / Rear</string>
     <string name="radio_button_volume_boost_mode_to_front">Only Front</string>
     <string name="radio_button_volume_boost_type_add">+</string>
