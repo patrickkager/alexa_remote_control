@@ -231,13 +231,13 @@ public class MainActivity extends Activity {
             if(type.equals("inc") || type.equals("dec")) {
                 if (volumeBoostGroup.equals("All")) {
                     if(volumeBoostType.equals("Add")){
-                        volume = (int)(volume + volumeBoost);
+                        volume = (int)Math.round(volume + volumeBoost);
                     }else if(volumeBoostType.equals("Sub")){
-                        volume = (int)(volume - volumeBoost);
+                        volume = (int)Math.round(volume - volumeBoost);
                     }else if(volumeBoostType.equals("Divide")){
-                        volume = (int)(volume / volumeBoost);
+                        volume = (int)Math.round(volume / volumeBoost);
                     } else if(volumeBoostType.equals("Mulitply")){
-                        volume = (int)(volume * volumeBoost);
+                        volume = (int)Math.round(volume * volumeBoost);
                     }
 
                     if(volume <= 0)
@@ -251,13 +251,13 @@ public class MainActivity extends Activity {
             if(type.equals("inc") || type.equals("dec")) {
                 if (volumeBoostGroup.equals("Front")) {
                     if(volumeBoostType.equals("Add")){
-                        volumeFront = (int)(volumeFront + volumeBoost);
+                        volumeFront = (int)Math.round(volumeFront + volumeBoost);
                     }else if(volumeBoostType.equals("Sub")){
-                        volumeFront = (int)(volumeFront - volumeBoost);
+                        volumeFront = (int)Math.round(volumeFront - volumeBoost);
                     }else if(volumeBoostType.equals("Divide")){
-                        volumeFront = (int)(volumeFront / volumeBoost);
+                        volumeFront = (int)Math.round(volumeFront / volumeBoost);
                     } else if(volumeBoostType.equals("Mulitply")){
-                        volumeFront = (int)(volumeFront * volumeBoost);
+                        volumeFront = (int)Math.round(volumeFront * volumeBoost);
                     }
 
                     if(volumeFront <= 0)
@@ -276,13 +276,13 @@ public class MainActivity extends Activity {
             Integer volumeRear = volume;
             if(type.equals("inc") || type.equals("dec")){
                 if(volumeDiffType.equals("Add")){
-                    volumeRear = (int)(volumeRear + changeVolumeDiff);
+                    volumeRear = (int)Math.round(volumeRear + changeVolumeDiff);
                 }else if(volumeDiffType.equals("Sub")){
-                    volumeRear = (int)(volumeRear - changeVolumeDiff);
+                    volumeRear = (int)Math.round(volumeRear - changeVolumeDiff);
                 } else if(volumeDiffType.equals("Divide")){
-                    volumeRear = (int)(volumeRear / changeVolumeDiff);
+                    volumeRear = (int)Math.round(volumeRear / changeVolumeDiff);
                 } else if(volumeDiffType.equals("Mulitply")){
-                    volumeRear = (int)(volumeRear * changeVolumeDiff);
+                    volumeRear = (int)Math.round(volumeRear * changeVolumeDiff);
                 }
 
                 if(volumeRear < 0)
@@ -340,10 +340,10 @@ public class MainActivity extends Activity {
         roomNameRear = settings.getString("roomNameRear", "Wohnzimmer");
         volumeCmd = settings.getString("volumeCmd","fixed");
         keyPressWait = settings.getInt("keyPressWait",250);
-        changeVolumeDiff = settings.getFloat("changeVolumeDiff", 0);
+        changeVolumeDiff = settings.getFloat("changeVolumeDiff", 3.5F);
         volumeBoost  = settings.getFloat("volumeBoost",0);
         volumeBoostType = settings.getString("volumeBoostType", "Add");
-        volumeDiffType = settings.getString("volumeDiffType", "Sub");
+        volumeDiffType = settings.getString("volumeDiffType", "Divide");
         volumeBoostGroup = settings.getString("volumeBoostGroup", "All");
         debugOutPut = settings.getBoolean("debugMode", false);
 
