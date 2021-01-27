@@ -89,14 +89,16 @@ public class MainActivity extends Activity {
         alexaViewer.getSettings().setJavaScriptEnabled(true);
         alexaViewer.getSettings().setLoadWithOverviewMode(true);
         alexaViewer.getSettings().setUseWideViewPort(true);
-
+        alexaViewer.setFocusableInTouchMode(true);
         alexaViewer.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
 
                 if(url.contains("/ap/signin")){
                     String js = "javascript:(function(){"+
-                            "document.getElementById('ap_email').value = '"+username+"';"+
+                            "if(document.getElementById('ap_email') != null){"+
+                                "document.getElementById('ap_email').value = '"+username+"';"+
+                            "}"+
                             "document.getElementById('ap_password').value = '"+password+"';"+
                             "document.getElementById('signInSubmit').click();"+
                             "})()";
@@ -320,6 +322,7 @@ public class MainActivity extends Activity {
     public void ClickSubmit(View view){
         String js = "javascript:(function(){"+
                 "document.getElementById('auth-signin-button').click();"+
+                "document.getElementById('signInSubmit').click();"+
                 "})()";
         alexaViewer.evaluateJavascript(js, new ValueCallback<String>() {
             @Override
