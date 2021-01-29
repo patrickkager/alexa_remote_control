@@ -115,8 +115,14 @@ public class MainActivity extends Activity {
                     alexaViewer.loadUrl("https://"+alexaBaseURI+"/api/devices-v2/device",httpHeaders);
                 }else if(url.contains("/devices-v2/device")){
                     Cookies = CookieManager.getInstance().getCookie(url);
-                    Csrf =  Cookies.substring(Cookies.lastIndexOf("csrf="));
-                    Csrf = Csrf.replace("csrf=","");
+                    String[] arrCookies = Cookies.split(";");
+                    for (String arrName : arrCookies) {
+                        arrName = arrName.trim();
+                        if(arrName.toLowerCase().startsWith("csrf=")){
+                            Csrf = arrName.replace("csrf=","");
+                            break;
+                        }
+                    }
                     alexaViewer.evaluateJavascript("(function(){return JSON.parse(document.body.innerText)})();",
                             new ValueCallback<String>() {
                                 @Override
@@ -200,7 +206,7 @@ public class MainActivity extends Activity {
             conn.disconnect();
 
             if(conn.getResponseCode() != 200) {
-                alexPostResult += mes+"<br/>";
+                alexPostResult += mes+"#"+conn.getResponseCode()+"<br/>";
 
                 if(debugOutPut)
                     Log.d(TAG,mes);

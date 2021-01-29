@@ -77,8 +77,7 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <view
-                class="com.android.remote.volumecontrol.CustomWebview"
+            <WebView
                 android:id="@+id/alexaWebViewer"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
