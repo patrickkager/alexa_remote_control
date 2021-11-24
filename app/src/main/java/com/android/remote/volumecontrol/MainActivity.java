@@ -2,6 +2,9 @@ package com.android.remote.volumecontrol;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.os.Bundle;
@@ -41,7 +44,6 @@ public class MainActivity extends Activity {
 
     //General Variables
     private static final String PREFER_NAME = "settingsMain";
-    private SettingsContentObserver mSettingsContentObserver;
     private WebView alexaViewer;
     private LinearLayout settingsView;
     private boolean loginDone = false;
@@ -69,10 +71,45 @@ public class MainActivity extends Activity {
     private String volumeCmd = "";
     public boolean debugOutPut = false;
 
+    private SettingsContentObserver mSettingsContentObserver;
+    private Intent mServiceIntent;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        DoInit(savedInstanceState);
+
+        mSettingsContentObserver = new SettingsContentObserver(this,new Handler());
+        this.getApplicationContext().getContentResolver().registerContentObserver(
+                android.provider.Settings.System.CONTENT_URI, true,
+                mSettingsContentObserver);
+
+        mServiceIntent = new Intent(this, mSettingsContentObserver.getClass());
+        if (!isMyServiceRunning(mSettingsContentObserver.getClass())) {
+            startService(mServiceIntent);
+        }
+
+
+
+    }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                Log.i ("isMyServiceRunning?", true+"");
+                return true;
+            }
+        }
+        Log.i ("isMyServiceRunning?", false+"");
+        return false;
+    }
+
 
     @SuppressLint("JavascriptInterface")
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void DoInit(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -150,10 +187,12 @@ public class MainActivity extends Activity {
             }
         });
 
+       /*
         mSettingsContentObserver = new SettingsContentObserver(this,new Handler());
         this.getApplicationContext().getContentResolver().registerContentObserver(
                 android.provider.Settings.System.CONTENT_URI, true,
                 mSettingsContentObserver);
+*/
 
         LoadSettings();
 
@@ -582,6 +621,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        stopService(mServiceIntent);
         getApplicationContext().getContentResolver().unregisterContentObserver(mSettingsContentObserver);
     }
 }

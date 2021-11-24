@@ -5,4 +5,8 @@
     <color name="search_opaque">#ffaa3f</color>
     <color name="selected_background">#ffaa3f</color>
     <color name="default_background">#3d3d3d</color>
+    <!-- Button Styles -->
+    <color name="button_normal_background">#3d3d3d</color>
+    <color name="button_focused_background">#ffaa3f</color>
+    <color name="button_selected_background">#0096a6</color>
 </resources>

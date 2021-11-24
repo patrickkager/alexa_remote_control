@@ -28,6 +28,18 @@
             <meta-data android:name="com.amazon.input.cursor" android:value="pointer"/>
         </activity>
 
+        <service
+            android:name=".ContentObserverService"
+            android:enabled="true" >
+        </service>
+
+        <receiver
+            android:name=".ContentObserverServiceRestarter"
+            android:enabled="true"
+            android:exported="true"
+            android:label="RestartServiceWhenStopped">
+        </receiver>
+
         <receiver android:name=".autostart">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
