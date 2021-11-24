@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.android.remote.volumecontrol">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.android.remote.volumecontrol">
 
     <uses-feature android:name="android.software.leanback" android:required="true" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
@@ -30,15 +32,9 @@
 
         <service
             android:name=".ContentObserverService"
-            android:enabled="true" >
-        </service>
-
-        <receiver
-            android:name=".ContentObserverServiceRestarter"
             android:enabled="true"
-            android:exported="true"
-            android:label="RestartServiceWhenStopped">
-        </receiver>
+            tools:ignore="Instantiatable">
+        </service>
 
         <receiver android:name=".autostart">
             <intent-filter>

@@ -1,13 +1,10 @@
 package com.android.remote.volumecontrol;
 
 import android.content.Context;
-import android.content.Intent;
 import android.database.ContentObserver;
 import android.media.AudioManager;
 import android.os.Handler;
 import android.util.Log;
-import android.webkit.WebView;
-import android.widget.TextView;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -15,15 +12,15 @@ import java.util.TimerTask;
 public class SettingsContentObserver extends ContentObserver {
 
     private  int previousVolume;
-    private Context context;
     private AudioManager audioManager;
+    private Context context;
     private boolean lastMuteState = false;
     private boolean isCheckRunning = false;
 
-    public SettingsContentObserver(Context c, Handler handler) {
+    public SettingsContentObserver(Handler handler) {
         super(handler);
 
-        this.context = c;
+        this.context = MainActivity.getContext();
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         previousVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
 
@@ -38,9 +35,9 @@ public class SettingsContentObserver extends ContentObserver {
                     }
 
                     if(b){
-                        ((MainActivity)context).ChangeVolume(0,"mute");
+                        AlexaCommands.ChangeVolume(0,"mute");
                     }else{
-                        ((MainActivity)context).ChangeVolume(previousVolume,"unmute");
+                        AlexaCommands.ChangeVolume(previousVolume,"unmute");
                     }
                 }
             }
@@ -61,12 +58,12 @@ public class SettingsContentObserver extends ContentObserver {
         if (isCheckRunning || currentVolume == previousVolume)
             return;
 
-        if(((MainActivity)context).debugOutPut){
+        if(MainActivity.getInstance().debugOutPut){
             Log.d("VolumeListener","Received Volume Current:"+currentVolume+ " Previous:"+previousVolume);
         }
 
         isCheckRunning = true;
-        int waitTime = ((MainActivity)this.context).keyPressWait;
+        int waitTime = MainActivity.getInstance().keyPressWait;
         while (true) {
             try {
                 Thread.sleep(waitTime);
@@ -90,12 +87,12 @@ public class SettingsContentObserver extends ContentObserver {
             type = "inc";
         }
 
-        if(((MainActivity)context).debugOutPut){
+        if(MainActivity.getInstance().debugOutPut){
             Log.d("VolumeListener","Set Volume Type: "+type+" Current:"+currentVolume+ " Previous:"+previousVolume);
         }
 
         previousVolume = currentVolume;
-        ((MainActivity) context).ChangeVolume(currentVolume,type);
+        AlexaCommands.ChangeVolume(currentVolume,type);
         isCheckRunning = false;
     }
 

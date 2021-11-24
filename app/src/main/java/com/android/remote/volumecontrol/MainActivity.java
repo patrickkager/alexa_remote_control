@@ -6,9 +6,8 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.media.AudioManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
@@ -24,18 +23,10 @@ import android.widget.RadioButton;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONStringer;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.URL;
-import java.net.HttpURLConnection;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /*
  * Main Activity class that loads {@link MainFragment}.
@@ -43,17 +34,17 @@ import java.util.TimerTask;
 public class MainActivity extends Activity {
 
     //General Variables
-    private static final String PREFER_NAME = "settingsMain";
+    public static final String PREFER_NAME = "settingsMain";
     private WebView alexaViewer;
     private LinearLayout settingsView;
     private boolean loginDone = false;
-    private String TAG = "MainActivity";
+    public String TAG = "MainActivity";
     private boolean settingsVisible = false;
-    private String Cookies = "";
-    private String Csrf = "";
-    private Map<String,String> frontDevices;
-    private Map<String,String> rearDevices;
-    private String alexPostResult = "";
+    public String Cookies = "";
+    public String Csrf = "";
+    public Map<String,String> frontDevices;
+    public Map<String,String> rearDevices;
+    private static MainActivity instance;
 
     //Settings to Store
     public String volumeBoostGroup = "";
@@ -62,37 +53,42 @@ public class MainActivity extends Activity {
     public float volumeBoost = 0;
     public float changeVolumeDiff = 0;
     public Integer keyPressWait = 0;
-    public String alexaLoginUrl = "alexa.amazon.de";
-    public String alexaBaseURI = "alexa.amazon.de";
+    public static String alexaLoginUrl = "alexa.amazon.de";
+    public static String alexaBaseURI = "alexa.amazon.de";
     private String roomNameFront = "";
     private String roomNameRear = "";
     private String username = "";
     private String password = "";
-    private String volumeCmd = "";
+    public String volumeCmd = "";
     public boolean debugOutPut = false;
 
-    private SettingsContentObserver mSettingsContentObserver;
     private Intent mServiceIntent;
+    private ContentObserverService mObersrverService;
 
+    public static MainActivity getInstance() {
+        return instance;
+    }
+    public static Context getContext(){
+        return instance;
+        // or return instance.getApplicationContext();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        instance = this;
         super.onCreate(savedInstanceState);
 
         DoInit(savedInstanceState);
 
-        mSettingsContentObserver = new SettingsContentObserver(this,new Handler());
-        this.getApplicationContext().getContentResolver().registerContentObserver(
-                android.provider.Settings.System.CONTENT_URI, true,
-                mSettingsContentObserver);
-
-        mServiceIntent = new Intent(this, mSettingsContentObserver.getClass());
-        if (!isMyServiceRunning(mSettingsContentObserver.getClass())) {
-            startService(mServiceIntent);
+        mObersrverService = new ContentObserverService();
+        mServiceIntent = new Intent(this, mObersrverService.getClass());
+        if (!isMyServiceRunning(mObersrverService.getClass())) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(mServiceIntent);
+            } else {
+                startService(mServiceIntent);
+            }
         }
-
-
-
     }
 
     private boolean isMyServiceRunning(Class<?> serviceClass) {
@@ -160,6 +156,7 @@ public class MainActivity extends Activity {
                             break;
                         }
                     }
+
                     alexaViewer.evaluateJavascript("(function(){return JSON.parse(document.body.innerText)})();",
                             new ValueCallback<String>() {
                                 @Override
@@ -187,13 +184,6 @@ public class MainActivity extends Activity {
             }
         });
 
-       /*
-        mSettingsContentObserver = new SettingsContentObserver(this,new Handler());
-        this.getApplicationContext().getContentResolver().registerContentObserver(
-                android.provider.Settings.System.CONTENT_URI, true,
-                mSettingsContentObserver);
-*/
-
         LoadSettings();
 
         if(!username.isEmpty() && !password.isEmpty()){
@@ -204,155 +194,6 @@ public class MainActivity extends Activity {
             }
         }else{
             ShowSettings(null);
-        }
-    }
-
-    private Boolean sendAlexaCommand(String DeviceSerial, String DeviceType,Integer Volume) {
-
-        try {
-            String jsonString = "";
-            if(volumeCmd.contains("fixed")){
-                jsonString ="{\"type\":\"VolumeLevelCommand\",\"volumeLevel\":"+Volume+",\"contentFocusClientId\":\"Default\"}";
-            }else{
-                jsonString ="{\"type\":\"VolumeAdjustCommand\",\"volumeAdjustment\":"+Volume+",\"contentFocusClientId\":\"Default\"}";
-            }
-
-            URL url = new URL("https://"+alexaBaseURI+"/api/np/command?deviceSerialNumber="+DeviceSerial+"&deviceType="+DeviceType);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setDoOutput(true);
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Cookie",Cookies);
-            conn.setRequestProperty("csrf",Csrf);
-            conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-            OutputStream os = conn.getOutputStream();
-            os.write(jsonString.getBytes());
-            os.flush();
-
-            BufferedReader br;
-            if(conn.getResponseCode() == 200) {
-                br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
-            }else {
-                br = new BufferedReader(new InputStreamReader((conn.getErrorStream())));
-            }
-
-            String output;
-            StringBuilder response = new StringBuilder();
-            while ((output = br.readLine()) != null) {
-                response.append(output);
-                response.append('\r');
-            }
-            String mes = response.toString();
-            conn.disconnect();
-
-            if(conn.getResponseCode() != 200) {
-                alexPostResult += mes+"#"+conn.getResponseCode()+"<br/>";
-
-                if(debugOutPut)
-                    Log.d(TAG,mes);
-            }else{
-                if(debugOutPut){
-                    Calendar c = Calendar.getInstance();
-                    SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss.SSS");
-                    String formattedDate = df.format(c.getTime());
-                    alexPostResult += "<h2>"+formattedDate+" Volume ("+volumeCmd+") Changed to "+Volume+" for type: "+DeviceType+" serial:"+DeviceSerial+"</h2>";
-                    Log.d(TAG,alexPostResult);
-                }
-            }
-
-            return mes != null && !mes.isEmpty();
-
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    public void ChangeVolume(Integer volume,String type) {
-
-        if( !alexPostResult.isEmpty() || debugOutPut)
-            alexaViewer.loadData("<h1>Previous Result:</h1><br />"+alexPostResult,"text/html","UTF-8");
-
-        alexPostResult = "";
-        try{
-            //Volume Boost for All
-            if(type.equals("inc") || type.equals("dec")) {
-                if (volumeBoostGroup.equals("All")) {
-                    if(volumeBoostType.equals("Add")){
-                        volume = (int)Math.round(volume + volumeBoost);
-                    }else if(volumeBoostType.equals("Sub")){
-                        volume = (int)Math.round(volume - volumeBoost);
-                    }else if(volumeBoostType.equals("Divide")){
-                        volume = (int)Math.round(volume / volumeBoost);
-                    } else if(volumeBoostType.equals("Mulitply")){
-                        volume = (int)Math.round(volume * volumeBoost);
-                    }
-
-                    if(volume <= 0)
-                        volume = 1;
-                }
-
-                if(volume > 100)
-                    volume = 99;
-            }
-
-            //Front Devices
-            //Volume Boost Only for Front
-            Integer volumeFront = volume;
-            if(type.equals("inc") || type.equals("dec")) {
-                if (volumeBoostGroup.equals("Front")) {
-                    if(volumeBoostType.equals("Add")){
-                        volumeFront = (int)Math.round(volumeFront + volumeBoost);
-                    }else if(volumeBoostType.equals("Sub")){
-                        volumeFront = (int)Math.round(volumeFront - volumeBoost);
-                    }else if(volumeBoostType.equals("Divide")){
-                        volumeFront = (int)Math.round(volumeFront / volumeBoost);
-                    } else if(volumeBoostType.equals("Mulitply")){
-                        volumeFront = (int)Math.round(volumeFront * volumeBoost);
-                    }
-
-                    if(volumeFront <= 0)
-                        volumeFront = 1;
-                }
-
-                if(volumeFront > 100)
-                    volumeFront = 99;
-            }
-
-            for (Map.Entry<String, String> entry : frontDevices.entrySet()) {
-                Integer finalVolume = volumeFront;
-                new Thread(() -> sendAlexaCommand(entry.getKey() , entry.getValue(), finalVolume)).start();
-                //sendAlexaCommand(entry.getKey() , entry.getValue(),finalVolume);
-            }
-
-            //Rear Devices
-            //Volume Difference to front
-            Integer volumeRear = volume;
-            if(type.equals("inc") || type.equals("dec")){
-                if(volumeDiffType.equals("Add")){
-                    volumeRear = (int)Math.round(volumeRear + changeVolumeDiff);
-                }else if(volumeDiffType.equals("Sub")){
-                    volumeRear = (int)Math.round(volumeRear - changeVolumeDiff);
-                } else if(volumeDiffType.equals("Divide")){
-                    volumeRear = (int)Math.round(volumeRear / changeVolumeDiff);
-                } else if(volumeDiffType.equals("Mulitply")){
-                    volumeRear = (int)Math.round(volumeRear * changeVolumeDiff);
-                }
-
-                if(volumeRear < 0)
-                    volumeRear = 1;
-
-                if(volumeRear > 100)
-                    volumeRear = 99;
-            }
-
-            for (Map.Entry<String, String> entry : rearDevices.entrySet()) {
-                Integer finalVolume = volumeRear;
-                new Thread(() -> sendAlexaCommand(entry.getKey() , entry.getValue(), finalVolume)).start();
-                //sendAlexaCommand(entry.getKey() , entry.getValue(),finalVolume);
-            }
-
-        }catch (Exception ex){
-            ex.printStackTrace();
         }
     }
 
@@ -622,6 +463,5 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         stopService(mServiceIntent);
-        getApplicationContext().getContentResolver().unregisterContentObserver(mSettingsContentObserver);
     }
 }
