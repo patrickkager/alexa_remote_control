@@ -3,13 +3,16 @@ package com.android.remote.volumecontrol;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
+import android.view.PointerIcon;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.ValueCallback;
@@ -19,6 +22,8 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,7 +39,6 @@ import java.util.Map;
 public class MainActivity extends Activity {
 
     //General Variables
-    public static final String PREFER_NAME = "settingsMain";
     private WebView alexaViewer;
     private LinearLayout settingsView;
     private boolean loginDone = false;
@@ -44,7 +48,6 @@ public class MainActivity extends Activity {
     public String Csrf = "";
     public Map<String,String> frontDevices;
     public Map<String,String> rearDevices;
-    private static MainActivity instance;
 
     //Settings to Store
     public String volumeBoostGroup = "";
@@ -53,8 +56,6 @@ public class MainActivity extends Activity {
     public float volumeBoost = 0;
     public float changeVolumeDiff = 0;
     public Integer keyPressWait = 0;
-    public static String alexaLoginUrl = "alexa.amazon.de";
-    public static String alexaBaseURI = "alexa.amazon.de";
     private String roomNameFront = "";
     private String roomNameRear = "";
     private String username = "";
@@ -62,47 +63,39 @@ public class MainActivity extends Activity {
     public String volumeCmd = "";
     public boolean debugOutPut = false;
 
-    private Intent mServiceIntent;
-    private ContentObserverService mObersrverService;
-
-    public static MainActivity getInstance() {
-        return instance;
-    }
-    public static Context getContext(){
-        return instance;
-        // or return instance.getApplicationContext();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        instance = this;
         super.onCreate(savedInstanceState);
 
         DoInit(savedInstanceState);
 
-        mObersrverService = new ContentObserverService();
-        mServiceIntent = new Intent(this, mObersrverService.getClass());
-        if (!isMyServiceRunning(mObersrverService.getClass())) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(mServiceIntent);
-            } else {
-                startService(mServiceIntent);
-            }
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ContentObserverService.ACTION_FOO);
+        LocalBroadcastManager bm = LocalBroadcastManager.getInstance(this);
+        bm.registerReceiver(mBroadcastReceiver, filter);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+            RestartBroadcastReceiver.scheduleJob(getApplicationContext());
+        } else {
+            ServiceAdmin bck = new ServiceAdmin();
+            bck.launchService(getApplicationContext());
         }
     }
 
-    private boolean isMyServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                Log.i ("isMyServiceRunning?", true+"");
-                return true;
+    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(ContentObserverService.ACTION_FOO)) {
+                final String param = intent.getStringExtra(ContentObserverService.EXTRA_PARAM_A);
+                Log.d(TAG,"ContentObserverService - Timer is running "+param);
             }
         }
-        Log.i ("isMyServiceRunning?", false+"");
-        return false;
-    }
-
+    };
 
     @SuppressLint("JavascriptInterface")
     public void DoInit(Bundle savedInstanceState) {
@@ -115,6 +108,7 @@ public class MainActivity extends Activity {
         settingsView = (LinearLayout) findViewById(R.id.layoutSettings);
         alexaViewer = (WebView)findViewById(R.id.alexaWebViewer);
 
+        alexaViewer.setPointerIcon(PointerIcon.getSystemIcon(this, PointerIcon.TYPE_ARROW));
         alexaViewer.setVisibility(View.VISIBLE);
         settingsView.setVisibility(View.GONE);
 
@@ -145,7 +139,7 @@ public class MainActivity extends Activity {
                     loginDone = true;
                     Map<String,String> httpHeaders = new HashMap<>();
                     httpHeaders.put("Content-Type","application/json");
-                    alexaViewer.loadUrl("https://"+alexaBaseURI+"/api/devices-v2/device",httpHeaders);
+                    alexaViewer.loadUrl("https://"+MyApp.alexaBaseURI+"/api/devices-v2/device",httpHeaders);
                 }else if(url.contains("/devices-v2/device")){
                     Cookies = CookieManager.getInstance().getCookie(url);
                     String[] arrCookies = Cookies.split(";");
@@ -166,6 +160,15 @@ public class MainActivity extends Activity {
                                         JSONArray deviceList = objDeviceList.getJSONArray("devices");
                                         frontDevices = GetDeviceByName(roomNameFront,deviceList);
                                         rearDevices = GetDeviceByName(roomNameRear,deviceList);
+
+                                        SharedPreferences settings = getSharedPreferences(MyApp.PREFER_NAME, MODE_PRIVATE);
+                                        SharedPreferences.Editor editor = settings.edit();
+                                        editor.putString("Cookies", Cookies);
+                                        editor.putString("Csrf", Csrf);
+                                        editor.putString("frontDevices", MyApp.MapToJson(frontDevices));
+                                        editor.putString("rearDevices", MyApp.MapToJson(rearDevices));
+                                        editor.apply();
+
                                     } catch (JSONException e) {
                                         e.printStackTrace();
                                     }
@@ -198,11 +201,11 @@ public class MainActivity extends Activity {
     }
 
     public void DoLogin(View view) {
-        alexaViewer.loadUrl("https://"+alexaLoginUrl);
+        alexaViewer.loadUrl("https://"+MyApp.alexaLoginUrl);
     }
 
     public void ReLoadDevices(){
-        alexaViewer.loadUrl("https://"+alexaBaseURI+"/api/devices-v2/device");
+        alexaViewer.loadUrl("https://"+MyApp.alexaBaseURI+"/api/devices-v2/device");
     }
 
     public void ClickSubmit(View view){
@@ -231,7 +234,7 @@ public class MainActivity extends Activity {
     }
 
     private void LoadSettings(){
-        SharedPreferences settings = getSharedPreferences(PREFER_NAME, MODE_PRIVATE);
+        SharedPreferences settings = getSharedPreferences(MyApp.PREFER_NAME, MODE_PRIVATE);
         username = settings.getString("username", "");
         password = settings.getString("password", "");
         roomNameFront = settings.getString("roomNameFront", "EchoStudio");
@@ -408,7 +411,7 @@ public class MainActivity extends Activity {
             volumeBoostGroup = "Front";
         }
 
-        SharedPreferences settings = getSharedPreferences(PREFER_NAME, MODE_PRIVATE);
+        SharedPreferences settings = getSharedPreferences(MyApp.PREFER_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = settings.edit();
         editor.putString("username", username);
         editor.putString("password", password);
@@ -462,6 +465,5 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopService(mServiceIntent);
     }
 }
